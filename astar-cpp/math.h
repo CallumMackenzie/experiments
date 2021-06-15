@@ -1,16 +1,19 @@
 #pragma once
 
+template<typename T>
 struct Vec2
 {
 	union
 	{
-		int width;
-		int x;
+		T width;
+		T x;
+		T horizontal;
 	};
 	union
 	{
-		int height;
-		int y;
+		T height;
+		T y;
+		T vertical;
 	};
 	std::string toString()
 	{

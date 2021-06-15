@@ -36,11 +36,11 @@ enum class MapTile
 
 struct Map
 {
-	Vec2 size;
+	Vec2<int> size;
 	MapTile *map;
 	bool allowDiagonal = false;
 
-	Map(Vec2 sz)
+	Map(Vec2<int> sz)
 	{
 		size = sz;
 		map = new MapTile[sz.width * sz.height];
@@ -61,7 +61,7 @@ struct Map
 		return map[mapIndex(x, y)];
 	}
 
-	MapTile get(Vec2 v)
+	MapTile get(Vec2<int> v)
 	{
 		return get(v.x, v.y);
 	}
@@ -71,7 +71,7 @@ struct Map
 		map[mapIndex(x, y)] = tile;
 	}
 
-	void set(Vec2 v, MapTile tile)
+	void set(Vec2<int> v, MapTile tile)
 	{
 		set(v.x, v.y, tile);
 	}
@@ -81,53 +81,53 @@ struct Map
 		return y * size.x + x;
 	}
 
-	int mapIndex(Vec2 v)
+	int mapIndex(Vec2<int> v)
 	{
 		return mapIndex(v.x, v.y);
 	}
 
-	Vec2 find(MapTile tile)
+	Vec2<int> find(MapTile tile)
 	{
 		for (int i = 0; i < size.x * size.y; i++)
 			if (get(indexMap(i)) == tile)
 				return indexMap(i);
-		return Vec2{};
+		return Vec2<int>{};
 	}
 
-	std::vector<Vec2> findAll(MapTile tile)
+	std::vector<Vec2<int>> findAll(MapTile tile)
 	{
-		std::vector<Vec2> tiles;
+		std::vector<Vec2<int>> tiles;
 		for (int i = 0; i < size.x * size.y; i++)
 			if (get(indexMap(i)) == tile)
 				tiles.push_back(indexMap(i));
 		return tiles;
 	}
 
-	Vec2 indexMap(int index)
+	Vec2<int> indexMap(int index)
 	{
 		int y = index / size.x;
 		int x = index - (y * size.x);
-		return Vec2{x, y};
+		return Vec2<int>{x, y};
 	}
 
-	std::vector<Vec2> getSurrounding(Vec2 v)
+	std::vector<Vec2<int>> getSurrounding(Vec2<int> v)
 	{
 		if (allowDiagonal)
-			return std::vector<Vec2>{
-				Vec2{0, -1} + v,
-				Vec2{0, 1} + v,
-				Vec2{-1, 0} + v,
-				Vec2{1, 0} + v,
-				Vec2{-1, -1} + v,
-				Vec2{1, -1} + v,
-				Vec2{-1, 1} + v,
-				Vec2{1, 1} + v};
+			return std::vector<Vec2<int>>{
+				Vec2<int>{0, -1} + v,
+				Vec2<int>{0, 1} + v,
+				Vec2<int>{-1, 0} + v,
+				Vec2<int>{1, 0} + v,
+				Vec2<int>{-1, -1} + v,
+				Vec2<int>{1, -1} + v,
+				Vec2<int>{-1, 1} + v,
+				Vec2<int>{1, 1} + v};
 		else
-			return std::vector<Vec2>{
-				Vec2{0, -1} + v,
-				Vec2{0, 1} + v,
-				Vec2{-1, 0} + v,
-				Vec2{1, 0} + v};
+			return std::vector<Vec2<int>>{
+				Vec2<int>{0, -1} + v,
+				Vec2<int>{0, 1} + v,
+				Vec2<int>{-1, 0} + v,
+				Vec2<int>{1, 0} + v};
 	}
 
 	void print()
@@ -142,12 +142,12 @@ struct Map
 
 	static Map *loadFromString(std::string input)
 	{
-		int mapWidth = (input.find('\n') == std::string::npos) ? input.size() : input.find('\n');
+		size_t mapWidth = (input.find('\n') == std::string::npos) ? input.size() : input.find('\n');
 		size_t newLine;
 		while ((newLine = input.find('\n')) != std::string::npos)
 			input.replace(newLine, 1, "");
-		int mapHeight = input.size() / mapWidth;
-		Map *map = new Map(Vec2{mapWidth, mapHeight});
+		size_t mapHeight = input.size() / mapWidth;
+		Map *map = new Map(Vec2<int>{(int)mapWidth, (int)mapHeight});
 		for (int i = 0; i < input.size(); i++)
 			map->map[i] = (MapTile)input[i];
 		return map;
@@ -156,7 +156,7 @@ struct Map
 
 struct AStarNode
 {
-	Vec2 loc;
+	Vec2<int> loc;
 	AStarNode *parent = nullptr;
 	int g = 0;
 	int h = 0;
@@ -167,10 +167,10 @@ struct AStarNode
 	}
 };
 
-std::vector<Vec2> unwindPath(AStarNode *currentNode)
+std::vector<Vec2<int>> unwindPath(AStarNode *currentNode)
 {
 
-	std::vector<Vec2> path = {currentNode->loc};
+	std::vector<Vec2<int>> path = {currentNode->loc};
 	AStarNode *node = currentNode;
 	do
 		path.push_back(node->loc);
@@ -178,14 +178,14 @@ std::vector<Vec2> unwindPath(AStarNode *currentNode)
 	return path;
 }
 
-std::vector<Vec2> aStar(Map *map, const size_t maxIters = 0)
+std::vector<Vec2<int>> aStar(Map *map, const size_t maxIters = 0)
 {
 	std::vector<AStarNode *> openNodes;
 	std::vector<AStarNode *> closedNodes;
-	std::vector<Vec2> pathFound;
+	std::vector<Vec2<int>> pathFound;
 
 	size_t iters = 0;
-	Vec2 endPos = map->find(MapTile::End);
+	Vec2<int> endPos = map->find(MapTile::End);
 
 	openNodes.push_back(new AStarNode{map->find(MapTile::Start)});
 
@@ -216,7 +216,7 @@ std::vector<Vec2> aStar(Map *map, const size_t maxIters = 0)
 			break;
 		}
 
-		for (Vec2 newPos : map->getSurrounding(currentNode->loc))
+		for (Vec2<int> newPos : map->getSurrounding(currentNode->loc))
 		{
 			if (newPos.x < 0 || newPos.y < 0 || newPos.x >= map->size.width || newPos.y >= map->size.height)
 				continue;
@@ -262,7 +262,7 @@ std::vector<Vec2> aStar(Map *map, const size_t maxIters = 0)
 
 int main(int argc, char *argv[])
 {
-	std::ifstream ifs("../maze.txt");
+	std::ifstream ifs("../../maze.txt");
 	std::string content((std::istreambuf_iterator<char>(ifs)),
 						(std::istreambuf_iterator<char>()));
 	ifs.close();
