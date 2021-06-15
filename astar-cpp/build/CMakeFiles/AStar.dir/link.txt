@@ -1,0 +1,1 @@
+/usr/bin/x86_64-linux-gnu-g++-8  -g  -rdynamic CMakeFiles/AStar.dir/main.cpp.o  -o AStar 

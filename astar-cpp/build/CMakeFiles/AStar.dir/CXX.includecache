@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/callum/astar-cpp/list.h
+vector
+-
+sstream
+-
+
+/home/callum/astar-cpp/main.cpp
+iostream
+-
+string
+-
+vector
+-
+fstream
+-
+time.h
+-
+list.h
+/home/callum/astar-cpp/list.h
+math.h
+/home/callum/astar-cpp/math.h
+
+/home/callum/astar-cpp/math.h
+
