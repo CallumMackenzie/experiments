@@ -217,15 +217,7 @@ struct Pathfinder
 	{
 		auto pairing = [](Vec2<int> v)
 		{
-			// Cantor pairing (didn't work)
-			// auto ret = (((v.x + v.y) + (v.x + v.y + 1)) / 2) + v.y;
-
-			// String (worked but could be faster)
-			// auto ret = v.toString();
-
-			// Binary concatonation
-			unsigned long long ret = ((0ULL | v.x) << 16) | v.y;
-			return ret;
+			return ((0ULL | v.x) << 16) | v.y;
 		};
 
 		std::vector<Node *> openNodes = {
@@ -233,9 +225,7 @@ struct Pathfinder
 		std::make_heap(openNodes.begin(), openNodes.end());
 		std::unordered_map<unsigned long long, bool> closedNodes;
 		std::vector<Vec2<int>> pathFound;
-
 		DLkList<Node *> allNodes = DLkList<Node *>(openNodes);
-
 		size_t iters = 0;
 		Vec2<int> endPos = map->find(MapTile::End);
 
@@ -245,7 +235,6 @@ struct Pathfinder
 			Node *currentNode = openNodes.back();
 			openNodes.pop_back();
 			closedNodes[pairing(currentNode->loc)] = true;
-
 			iters++;
 			if (iters >= maxIters && maxIters != 0)
 			{
@@ -253,32 +242,26 @@ struct Pathfinder
 				pathFound = unwindPath(currentNode);
 				break;
 			}
-
 			if (currentNode->loc == endPos)
 			{
 				pathFound = unwindPath(currentNode);
 				break;
 			}
-
 			for (Vec2<int> newPos : map->getSurrounding(currentNode->loc))
 			{
 				if (newPos.x < 0 || newPos.y < 0 || newPos.x >= map->size.width || newPos.y >= map->size.height)
 					continue;
 				if (map->get(newPos) == MapTile::Blocked)
 					continue;
-
 				Node *child = new Node{newPos, currentNode};
-
 				if (closedNodes.find(pairing(child->loc)) != closedNodes.end())
 				{
 					delete child;
 					continue;
 				}
-
 				child->g = currentNode->g + 1;
 				child->h = ((child->loc.x - endPos.x) * (child->loc.x - endPos.x)) +
 						   ((child->loc.y - endPos.y) * (child->loc.y - endPos.y));
-
 				bool pass = false;
 				for (Node *openNode : openNodes)
 					if (child->loc == openNode->loc && child->g > openNode->g)
@@ -318,10 +301,7 @@ int main(int argc, char *argv[])
 	DLkList<double> results;
 	for (size_t i = 0; i < 10; i++)
 	{
-		// std::cout << "Loading map." << std::endl;
-		// start = clock();
 		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../maze.txt");
-		// std::cout << "Map loaded in " << elapsedTimeMs() << "ms" << std::endl;
 
 		start = clock();
 		map->getPath();
