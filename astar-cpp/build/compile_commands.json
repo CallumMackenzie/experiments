@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/callum/astar-cpp/build",
-  "command": "/usr/bin/x86_64-linux-gnu-g++-8    -g   -o CMakeFiles/AStar.dir/main.cpp.o -c /home/callum/astar-cpp/main.cpp",
-  "file": "/home/callum/astar-cpp/main.cpp"
-}
-]
