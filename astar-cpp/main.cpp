@@ -5,8 +5,9 @@
 #include <fstream>
 #include <time.h>
 
-#include "list.h"
 #include "math.h"
+
+typedef unsigned int uint;
 
 uint deletes = 0;
 uint allocs = 0;
