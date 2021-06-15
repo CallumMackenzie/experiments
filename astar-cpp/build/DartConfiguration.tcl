@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/callum/astar-cpp
-BuildDirectory: /home/callum/astar-cpp/build
+SourceDirectory: /home/callum/tests/astar-cpp
+BuildDirectory: /home/callum/tests/astar-cpp/build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -36,7 +36,7 @@ ScpCommand: /usr/bin/scp
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/usr/bin/cmake" "/home/callum/astar-cpp"
+ConfigureCommand: "/usr/bin/cmake" "/home/callum/tests/astar-cpp"
 MakeCommand: /usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}" -- -i
 DefaultCTestConfigurationType: Release
 
