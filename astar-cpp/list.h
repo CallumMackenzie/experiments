@@ -164,6 +164,26 @@ struct DLkList
 		insert_before_node(index, new Node{nullptr, nullptr, data});
 	}
 
+	T pop_back()
+	{
+		return pop_end();
+	}
+
+	T pop_front()
+	{
+		return pop_start();
+	}
+
+	T front()
+	{
+		return head->data;
+	}
+
+	T back()
+	{
+		return tail->data;
+	}
+
 	void push_end_node(Node *node)
 	{
 		if (!head && !tail)
@@ -293,6 +313,17 @@ struct DLkList
 		{
 			Iterator tmp = *this;
 			++(*this);
+			return tmp;
+		}
+		Iterator &operator--()
+		{
+			m_ptr = m_ptr->prev;
+			return *this;
+		}
+		Iterator operator--(int)
+		{
+			Iterator tmp = *this;
+			--(*this);
 			return tmp;
 		}
 
