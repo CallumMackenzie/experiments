@@ -163,6 +163,12 @@ struct Pathfinder
 
 		static Map *loadFromString(std::string *input)
 		{
+			if (input->size() == 0)
+			{
+				std::cerr << "Input map string is empty, using default map." << std::endl;
+				MapTile stdMap[3] = {MapTile::Start, MapTile::Empty, MapTile::End};
+				input->append(std::string((char *)stdMap));
+			}
 			size_t mapWidth = (input->find('\n') == std::string::npos) ? input->size() : input->find('\n');
 			size_t newLine;
 			while ((newLine = input->find('\n')) != std::string::npos)
@@ -196,7 +202,7 @@ struct Pathfinder
 	static Map *loadMapFromFile(std::string path)
 	{
 
-		std::ifstream ifs("../maze2.txt");
+		std::ifstream ifs("../../maze2.txt");
 		std::string content((std::istreambuf_iterator<char>(ifs)),
 							(std::istreambuf_iterator<char>()));
 		ifs.close();
@@ -263,7 +269,7 @@ struct Pathfinder
 				child->h = ((child->loc.x - endPos.x) * (child->loc.x - endPos.x)) +
 						   ((child->loc.y - endPos.y) * (child->loc.y - endPos.y));
 				bool pass = false;
-				for (Node *openNode : openNodes)
+				for (auto openNode : openNodes)
 					if (child->loc == openNode->loc && child->g > openNode->g)
 					{
 						pass = true;
@@ -299,22 +305,26 @@ int main(int argc, char *argv[])
 	};
 
 	DLkList<double> results;
-	for (size_t i = 0; i < 10; i++)
+	for (size_t i = 0; i < 1; i++)
 	{
 		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../maze.txt");
-
 		start = clock();
-		map->getPath();
+		auto path = map->getPath();
 		results.push_back(elapsedTimeMs());
+		map->setPath(path);
+		map->print();
 		std::cout << "Algorithm completed in " << results.tail->data << "ms" << std::endl;
 		delete map;
 	}
-	double avg = 0;
-	for (auto result : results)
-		avg += result->data;
-	avg /= results.length;
-	results.clean();
-	std::cout << "Average algo time was " << avg << "ms" << std::endl;
+	if (results.length > 1)
+	{
+		double avg = 0;
+		for (auto result : results)
+			avg += result->data;
+		avg /= results.length;
+		results.clean();
+		std::cout << "Average algo time was " << avg << "ms" << std::endl;
+	}
 
 	std::cout << "Allocs: " << allocs << std::endl
 			  << "Deletes: " << deletes << std::endl;
