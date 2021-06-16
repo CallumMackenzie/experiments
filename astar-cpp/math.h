@@ -19,12 +19,18 @@ struct Vec2
 		T width;
 		T x;
 		T horizontal;
+		T w;
+		T u;
+		T s;
 	};
 	union
 	{
 		T height;
 		T y;
 		T vertical;
+		T h;
+		T v;
+		T t;
 	};
 	std::string toString()
 	{
@@ -41,6 +47,10 @@ struct Vec2
 	inline friend bool operator==(const Vec2 &lhs, const Vec2 &rhs)
 	{
 		return lhs.x == rhs.x && lhs.y == rhs.y;
+	}
+	inline friend bool operator!=(const Vec2 &lhs, const Vec2 &rhs)
+	{
+		return lhs.x != rhs.x || lhs.y != rhs.y;
 	}
 	inline friend Vec2 operator+(const Vec2 &lhs, const Vec2 &rhs)
 	{
