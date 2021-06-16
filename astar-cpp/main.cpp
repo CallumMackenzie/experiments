@@ -32,10 +32,15 @@ struct Pathfinder
 {
 	struct Node
 	{
-		Vec2<int> loc;
+		vec2i loc;
 		Node *parent = nullptr;
 		int g = 0;
 		int h = 0;
+
+		~Node()
+		{
+			// Pause here
+		}
 
 		int getF()
 		{
@@ -55,11 +60,11 @@ struct Pathfinder
 			None = '?',
 		};
 
-		Vec2<int> size;
+		vec2i size;
 		Tile *map;
 		bool allowDiagonal = false;
 
-		Map(Vec2<int> sz)
+		Map(vec2i sz)
 		{
 			size = sz;
 			map = new Tile[sz.width * sz.height];
@@ -80,7 +85,7 @@ struct Pathfinder
 			return map[mapIndex(x, y)];
 		}
 
-		inline Tile get(Vec2<int> v)
+		inline Tile get(vec2i v)
 		{
 			return get(v.x, v.y);
 		}
@@ -90,7 +95,7 @@ struct Pathfinder
 			map[mapIndex(x, y)] = tile;
 		}
 
-		inline void set(Vec2<int> v, Tile tile)
+		inline void set(vec2i v, Tile tile)
 		{
 			set(v.x, v.y, tile);
 		}
@@ -100,69 +105,69 @@ struct Pathfinder
 			return y * size.x + x;
 		}
 
-		inline int mapIndex(Vec2<int> v)
+		inline int mapIndex(vec2i v)
 		{
 			return mapIndex(v.x, v.y);
 		}
 
-		Vec2<int> find(Tile tile)
+		vec2i find(Tile tile)
 		{
 			for (int i = 0; i < size.x * size.y; i++)
 				if (get(indexMap(i)) == tile)
 					return indexMap(i);
-			return Vec2<int>{};
+			return vec2i{};
 		}
 
-		std::vector<Vec2<int>> findAll(Tile tile)
+		std::vector<vec2i> findAll(Tile tile)
 		{
-			std::vector<Vec2<int>> tiles;
+			std::vector<vec2i> tiles;
 			for (int i = 0; i < size.x * size.y; i++)
 				if (get(indexMap(i)) == tile)
 					tiles.push_back(indexMap(i));
 			return tiles;
 		}
 
-		Vec2<int> indexMap(int index)
+		vec2i indexMap(int index)
 		{
 			int y = index / size.x;
 			int x = index - (y * size.x);
-			return Vec2<int>{x, y};
+			return vec2i{x, y};
 		}
 
-		inline std::vector<Vec2<int>> getSurrounding(Vec2<int> v)
+		inline std::vector<vec2i> getSurrounding(vec2i v)
 		{
 			if (allowDiagonal)
-				return std::vector<Vec2<int>>{
-					Vec2<int>{0, -1} + v,
-					Vec2<int>{0, 1} + v,
-					Vec2<int>{-1, 0} + v,
-					Vec2<int>{1, 0} + v,
-					Vec2<int>{-1, -1} + v,
-					Vec2<int>{1, -1} + v,
-					Vec2<int>{-1, 1} + v,
-					Vec2<int>{1, 1} + v};
+				return std::vector<vec2i>{
+					vec2i{0, -1} + v,
+					vec2i{0, 1} + v,
+					vec2i{-1, 0} + v,
+					vec2i{1, 0} + v,
+					vec2i{-1, -1} + v,
+					vec2i{1, -1} + v,
+					vec2i{-1, 1} + v,
+					vec2i{1, 1} + v};
 			else
-				return std::vector<Vec2<int>>{
-					Vec2<int>{0, -1} + v,
-					Vec2<int>{0, 1} + v,
-					Vec2<int>{-1, 0} + v,
-					Vec2<int>{1, 0} + v};
+				return std::vector<vec2i>{
+					vec2i{0, -1} + v,
+					vec2i{0, 1} + v,
+					vec2i{-1, 0} + v,
+					vec2i{1, 0} + v};
 		}
 
-		void setPath(std::vector<Vec2<int>> path)
+		void setPath(std::vector<vec2i> path)
 		{
 			for (auto elem : path)
 				set(elem, Tile::Path);
 		}
 
-		std::vector<Vec2<int>> getPath(size_t maxIters = 0L)
+		inline std::vector<vec2i> getPath(size_t maxIters = 0L, vec2i startPos = vec2i{-1}, vec2i endPos = vec2i{-1})
 		{
-			return Pathfinder().getPath(this, maxIters);
+			return Pathfinder::getPath(this, maxIters, startPos, endPos);
 		}
 
-		void getAndSetPath(size_t maxIters = 0L)
+		inline void getAndSetPath(size_t maxIters = 0L, vec2i startPos = vec2i{-1}, vec2i endPos = vec2i{-1})
 		{
-			setPath(getPath(maxIters));
+			setPath(getPath(maxIters, startPos, endPos));
 		}
 
 		void print()
@@ -188,7 +193,7 @@ struct Pathfinder
 			while ((newLine = input->find('\n')) != std::string::npos)
 				input->replace(newLine, 1, "");
 			size_t mapHeight = input->size() / mapWidth;
-			Map *map = new Map(Vec2<int>{(int)mapWidth, (int)mapHeight});
+			Map *map = new Map(vec2i{(int)mapWidth, (int)mapHeight});
 			for (int i = 0; i < input->size(); i++)
 				map->map[i] = (Tile)(*input)[i];
 			return map;
@@ -210,38 +215,55 @@ struct Pathfinder
 		return loadMapFromString(&content);
 	}
 
-	std::vector<Vec2<int>> unwindPath(Node *currentNode)
+	static inline std::vector<vec2i> unwindPath(Node *currentNode)
 	{
-		std::vector<Vec2<int>> path = {currentNode->loc};
-		Node *node = currentNode;
+		std::vector<vec2i> path = {currentNode->loc};
+		auto node = currentNode;
 		do
 			path.push_back(node->loc);
 		while (node = node->parent);
 		return path;
 	}
 
-	std::vector<Vec2<int>> getPath(Map *map, const size_t maxIters = 0)
+	static inline bool shouldPass(std::vector<Node *> *openNodes, std::unordered_map<vec_hash, bool> *closedNodes,
+								  int child_g, vec2i *newPos, Map *map)
 	{
+		if (newPos->x < 0 || newPos->y < 0 || newPos->x >= map->size.width || newPos->y >= map->size.height)
+			return true;
+		if (map->get(*newPos) == Map::Tile::Blocked)
+			return true;
+		if (closedNodes->find(vec2i::hash(*newPos)) != closedNodes->end())
+			return true;
+		for (int i = openNodes->size() - 1; i > 0; i--)
+			if (*newPos == (*openNodes)[i]->loc && child_g > (*openNodes)[i]->g)
+				return true;
+		return false;
+	}
+
+	static std::vector<vec2i> getPath(Map *map, const size_t maxIters = 0,
+										  vec2i startPos = vec2i{-1}, vec2i endPos = vec2i{-1})
+	{
+		if (startPos.x < 0)
+			startPos = map->find(Map::Tile::Start);
+		if (endPos.x < 0)
+			endPos = map->find(Map::Tile::End);
 		std::vector<Node *> openNodes = {
-			new Node{map->find(Map::Tile::Start)}};
+			new Node{startPos}};
 		std::make_heap(openNodes.begin(), openNodes.end());
-		std::unordered_map<VecHash, bool> closedNodes;
-		std::vector<Vec2<int>> pathFound;
-
-		// LkList<Node *> allNodes = LkList<Node *>(openNodes);
-		// std::vector<Node *> allNodes = openNodes;
-		// auto allNodes = new Node *[map->size.width * map->size.height] { openNodes[0] };
-		PtrArray<Node> allNodes = PtrArray<Node>(map->size.width * map->size.height * (map->allowDiagonal ? 4 : 2), openNodes);
-
+		std::unordered_map<vec_hash, bool> closedNodes;
+		std::vector<vec2i> pathFound;
+#ifdef PATH_CAP_ITERS
 		size_t iters = 0;
-		Vec2<int> endPos = map->find(Map::Tile::End);
+#endif
+		std::vector<Node *> allNodes = openNodes;
 
 		while (openNodes.size() > 0)
 		{
 			std::pop_heap(openNodes.begin(), openNodes.end());
-			Node *currentNode = openNodes.back();
+			auto currentNode = openNodes.back();
 			openNodes.pop_back();
-			closedNodes[Vec2<int>::hash(currentNode->loc)] = true;
+			closedNodes[vec2i::hash(currentNode->loc)] = true;
+#ifdef PATH_CAP_ITERS
 			iters++;
 			if (iters >= maxIters && maxIters != 0)
 			{
@@ -249,55 +271,27 @@ struct Pathfinder
 				pathFound = unwindPath(currentNode);
 				break;
 			}
+#endif
 			if (currentNode->loc == endPos)
 			{
 				pathFound = unwindPath(currentNode);
 				break;
 			}
-			for (Vec2<int> newPos : map->getSurrounding(currentNode->loc))
+			for (vec2i newPos : map->getSurrounding(currentNode->loc))
 			{
-				if (newPos.x < 0 || newPos.y < 0 || newPos.x >= map->size.width || newPos.y >= map->size.height)
+				int child_g = currentNode->g + 1;
+				if (shouldPass(&openNodes, &closedNodes, child_g, &newPos, map))
 					continue;
-				if (map->get(newPos) == Map::Tile::Blocked)
-					continue;
-				Node *child = new Node{newPos, currentNode};
-				if (closedNodes.find(Vec2<int>::hash(child->loc)) != closedNodes.end())
-				{
-					delete child;
-					continue;
-				}
-				child->g = currentNode->g + 1;
-				Vec2<int> h = child->loc - endPos;
-				h = h * h;
-				// child->h = ((child->loc.x - endPos.x) * (child->loc.x - endPos.x)) +
-				// 		   ((child->loc.y - endPos.y) * (child->loc.y - endPos.y));
-				child->h = h.x + h.y;
-				bool pass = false;
-				for (auto openNode : openNodes)
-					if (child->loc == openNode->loc && child->g > openNode->g)
-					{
-						pass = true;
-						break;
-					}
 
-				if (pass)
-				{
-					delete child;
-					continue;
-				}
+				auto child = new Node{newPos, currentNode, child_g, (newPos - endPos).pow2().sum()};
+				allNodes.push_back(child);
 				openNodes.push_back(child);
 				std::push_heap(openNodes.begin(), openNodes.end());
-				allNodes.push_back(child);
 			}
-			// delete surrounding;
 		}
 
-		// allNodes.clear();
-		// for (auto node : allNodes)
-		// delete node->data;
-		// delete node;
-		closedNodes.clear();
-		openNodes.clear();
+		for (auto node : allNodes)
+			delete node;
 
 		return pathFound;
 	}
@@ -313,19 +307,21 @@ int main(int argc, char *argv[])
 	};
 
 	DLkList<double> results;
-	const size_t iters = 2;
+	vec2i mapSize;
+	const size_t iters = 10;
 	for (size_t i = 0; i < iters; i++)
 	{
-		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../maze2.txt");
+		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../maze3.txt");
+		mapSize = map->size;
 		start = clock();
-		auto path = map->getPath();
+		auto path = map->getPath(0UL, vec2i{1, 1}, vec2i{88, 59});
 		results.push_back(elapsedTimeMs());
 		if (iters <= 2)
 		{
 			map->setPath(path);
 			map->print();
 		}
-		std::cout << "Algorithm completed in " << results.tail->data << "ms" << std::endl;
+		// std::cout << "Algorithm completed in " << results.tail->data << "ms" << std::endl;
 		delete map;
 	}
 	if (results.length > 1)
@@ -342,7 +338,7 @@ int main(int argc, char *argv[])
 				highest = result->data;
 		}
 		avg /= results.length;
-		std::cout << "Average pathfinding time was " << avg << "ms" << std::endl
+		std::cout << "Average pathfinding time (" << mapSize.x << "x" << mapSize.y << ") was " << avg << "ms" << std::endl
 				  << "Lowest time was " << lowest << "ms" << std::endl
 				  << "Highest time was " << highest << "ms" << std::endl;
 	}

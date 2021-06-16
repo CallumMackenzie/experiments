@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <sstream>
+#include <unordered_map>
+#include <memory>
 
 template <typename T>
 struct DLkList
@@ -605,24 +607,7 @@ struct PtrArray
 
 	~PtrArray<T>()
 	{
-		if (deletePointersOnFree)
-			clear();
-		else
-			delete array;
-	}
-
-	void clear()
-	{
-		if (array)
-		{
-			// for (int i = 0; i < length; i++)
-			// {
-			// 	if (array[i])
-			// 		delete array[i];
-			// 	array[i] = nullptr;
-			// }
-			delete[] array;
-		}
+		delete[] array;
 	}
 
 	void push_back(T *value)
@@ -641,15 +626,15 @@ struct PtrArray
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
 		using value_type = T *;
-		using pointer = T **;
-		using reference = T *;
+		using pointer = value_type;
+		using reference = value_type;
 
 		Iterator(pointer ptr) : m_ptr(ptr)
 		{
 		}
 
 		reference operator*() const { return *m_ptr; }
-		pointer operator->() { return *m_ptr; }
+		pointer operator->() { return **m_ptr; }
 		Iterator &operator++()
 		{
 			m_ptr++;
