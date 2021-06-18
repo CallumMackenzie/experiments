@@ -9,7 +9,6 @@
 #include <unordered_map>
 
 #include "math.h"
-#include "list.h"
 
 typedef unsigned int uint;
 
@@ -36,11 +35,6 @@ struct Pathfinder
 		Node *parent = nullptr;
 		int g = 0;
 		int h = 0;
-
-		~Node()
-		{
-			// Pause here
-		}
 
 		int getF()
 		{
@@ -241,7 +235,7 @@ struct Pathfinder
 	}
 
 	static std::vector<vec2i> getPath(Map *map, const size_t maxIters = 0,
-										  vec2i startPos = vec2i{-1}, vec2i endPos = vec2i{-1})
+									  vec2i startPos = vec2i{-1}, vec2i endPos = vec2i{-1})
 	{
 		if (startPos.x < 0)
 			startPos = map->find(Map::Tile::Start);
@@ -306,15 +300,15 @@ int main(int argc, char *argv[])
 		return ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
 	};
 
-	DLkList<double> results;
+	std::vector<double> results;
 	vec2i mapSize;
-	const size_t iters = 10;
+	const size_t iters = 1;
 	for (size_t i = 0; i < iters; i++)
 	{
-		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../maze3.txt");
+		Pathfinder::Map *map = Pathfinder::loadMapFromFile("../../maze3.txt");
 		mapSize = map->size;
 		start = clock();
-		auto path = map->getPath(0UL, vec2i{1, 1}, vec2i{88, 59});
+		auto path = map->getPath(0UL); //, vec2i{1, 1}, vec2i{88, 59});
 		results.push_back(elapsedTimeMs());
 		if (iters <= 2)
 		{
@@ -324,20 +318,20 @@ int main(int argc, char *argv[])
 		// std::cout << "Algorithm completed in " << results.tail->data << "ms" << std::endl;
 		delete map;
 	}
-	if (results.length > 1)
+	if (results.size() > 1)
 	{
 		double avg = 0;
-		double lowest = results[0]->data;
-		double highest = results[0]->data;
+		double lowest = results[0];
+		double highest = results[0];
 		for (auto result : results)
 		{
-			avg += result->data;
-			if (result->data < lowest)
-				lowest = result->data;
-			if (result->data > highest)
-				highest = result->data;
+			avg += result;
+			if (result < lowest)
+				lowest = result;
+			if (result > highest)
+				highest = result;
 		}
-		avg /= results.length;
+		avg /= results.size();
 		std::cout << "Average pathfinding time (" << mapSize.x << "x" << mapSize.y << ") was " << avg << "ms" << std::endl
 				  << "Lowest time was " << lowest << "ms" << std::endl
 				  << "Highest time was " << highest << "ms" << std::endl;
