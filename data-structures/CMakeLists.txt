@@ -4,7 +4,7 @@ project(data-structures VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-add_executable(data-structures main.cpp linked-list.h doubly-linked-list.h memory-aid.h)
+add_executable(data-structures main.cpp linked-list.h doubly-linked-list.h memory-aid.h array.h binary-tree.h)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

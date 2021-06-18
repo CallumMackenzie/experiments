@@ -1,14 +1,11 @@
 #include <iostream>
 #include <vector>
 
-#define DLK_LIST_TO_STR
-#define LK_LIST_TO_STR
-#define DST_ARRAY_TO_STR
-
 #include "memory-aid.h"
 #include "linked-list.h"
 #include "doubly-linked-list.h"
 #include "array.h"
+#include "binary-tree.h"
 
 COUNT_MEMORY
 
@@ -28,7 +25,6 @@ int main(int argc, char **argv)
 		for (auto i : lkList)
 			std::cout << i->data << std::endl;
 		std::cout << "2: " << lkList[2]->data << std::endl;
-		std::cout << lkList.to_string() << std::endl;
 		lkList.clear();
 
 		header("DST::DLK_LIST");
@@ -36,7 +32,6 @@ int main(int argc, char **argv)
 		for (auto i : dlkList)
 			std::cout << i->data << std::endl;
 		std::cout << "2: " << dlkList[2]->data << std::endl;
-		std::cout << dlkList.to_string() << std::endl;
 		dlkList.clear();
 
 		header("DST::ARRAY");
@@ -44,7 +39,9 @@ int main(int argc, char **argv)
 		for (auto i : arr)
 			std::cout << i << std::endl;
 		std::cout << "2: " << arr[2] << std::endl;
-		std::cout << arr.to_string() << std::endl;
+
+		header("DST::BINARY_TREE");
+		auto btree = binary_tree<char>();
 	}
 
 	PRINT_MEMORY_SUMMARY

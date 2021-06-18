@@ -309,6 +309,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\Coding\Other\experiments\data-structures\linked-list.h" />
     <ClInclude Include="D:\Coding\Other\experiments\data-structures\doubly-linked-list.h" />
     <ClInclude Include="D:\Coding\Other\experiments\data-structures\memory-aid.h" />
+    <ClInclude Include="D:\Coding\Other\experiments\data-structures\array.h" />
+    <ClInclude Include="D:\Coding\Other\experiments\data-structures\binary-tree.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="D:\Coding\Other\experiments\data-structures\build\ZERO_CHECK.vcxproj">
