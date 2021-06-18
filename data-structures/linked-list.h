@@ -2,225 +2,232 @@
 #define LINKED_LIST_H 1
 
 #include <vector>
+
+#ifdef LK_LIST_TO_STR
 #include <sstream>
+#include <string>
+#endif
 
-template <typename T>
-struct LinkedList
+namespace dst
 {
-	struct Node
+	// A linked list class
+	template <typename T>
+	struct linked_list
 	{
-		Node *next;
-		T data;
-	};
-
-	Node *head = nullptr; // first node (start)
-	Node *tail = nullptr; // last node (end)
-	bool clearOnFree = false;
-	size_t length = 0;
-
-	LinkedList<T>()
-	{
-	}
-
-	LinkedList<T>(std::vector<T> data)
-	{
-		for (auto item : data)
-			push_end(item);
-	}
-
-	~LinkedList<T>()
-	{
-		if (clearOnFree)
-			clear();
-	}
-
-	size_t size()
-	{
-		if (!head && !tail)
-			return 0;
-		size_t elems = 0;
-		Node *node = head;
-		do
-			elems++;
-		while (node = node->next);
-		length = elems;
-		return elems;
-	}
-
-	void push_back(T data)
-	{
-		push_end(data);
-	}
-
-	void push_front(T data)
-	{
-		push_start(data);
-	}
-
-	void push_start(T data)
-	{
-		push_start_node(new Node{nullptr, data});
-	}
-
-	void push_end(T data)
-	{
-		push_end_node(new Node{nullptr, data});
-	}
-
-	void push_end_node(Node *node)
-	{
-		if (!tail && !head)
-			tail = head = node;
-		else
+		struct node
 		{
-			tail->next = node;
-			tail = node;
-		}
-	}
+			node *next;
+			T data;
+		};
 
-	void push_start_node(Node *node)
-	{
-		if (!tail && !head)
-			tail = head = node;
-		else
+		node *head = nullptr;		// First node (start)
+		node *tail = nullptr;		// Last node (end)
+		bool clear_on_free = false; // whether to delete nodes when the list is freed
+
+		linked_list<T>()
 		{
-			node->next = head;
-			head = node;
 		}
-	}
 
-	T pop_start()
-	{
-		auto node = pop_start_node();
-		if (node)
+		linked_list<T>(std::vector<T> data)
 		{
-			T data = node->data;
-			delete node;
-			return data;
+			for (auto item : data)
+				push_back(item);
 		}
-		return (T)NULL;
-	}
 
-	T pop_end()
-	{
-		auto node = pop_end_node();
-		if (node)
+		~linked_list<T>()
 		{
-			T data = node->data;
-			delete node;
-			return data;
+			if (clear_on_free)
+				clear();
 		}
-		return (T)NULL;
-	}
 
-	Node *pop_start_node()
-	{
-		if (!head && !tail)
-			return nullptr;
-		if (head == tail)
+		size_t size_check()
 		{
-			Node *popped = head;
-			head = nullptr;
-			tail = nullptr;
-			return popped;
+			if (!head && !tail)
+				return 0;
+			size_t elems = 0;
+			node *node = head;
+			do
+				elems++;
+			while (node = node->next);
+			length = elems;
+			return elems;
 		}
-		Node *popped = head;
-		head = head->next;
-		return popped;
-	}
 
-	Node *pop_end_node()
-	{
-		if (!head && !tail)
-			return nullptr;
-		if (head == tail)
+		size_t size()
 		{
-			Node *popped = head;
-			head = nullptr;
-			tail = nullptr;
-			return popped;
+			return length;
 		}
-		Node *beforeTail = head;
-		do
-			if (beforeTail->next == tail)
-				break;
-		while (beforeTail = beforeTail->next);
-		Node *popped = tail;
-		beforeTail->next = nullptr;
-		tail = beforeTail;
-		return popped;
-	}
 
-	std::string to_string()
-	{
-		if (!head && !tail)
-			return "";
-		std::ostringstream oss;
-		Node *node = head;
-		do
-			oss << node->data << (node->next ? "->" : "");
-		while (node = node->next);
-		return oss.str();
-	}
+		void push_front(T data)
+		{
+			push_front_node(new node{nullptr, data});
+		}
 
-	void clear()
-	{
-		while (Node *node = pop_start_node())
+		void push_back(T data)
+		{
+			push_back_node(new node{nullptr, data});
+		}
+
+		void push_back_node(node *node)
+		{
+			if (!tail && !head)
+				tail = head = node;
+			else
+			{
+				tail->next = node;
+				tail = node;
+			}
+		}
+
+		void push_front_node(node *node)
+		{
+			if (!tail && !head)
+				tail = head = node;
+			else
+			{
+				node->next = head;
+				head = node;
+			}
+		}
+
+		T pop_front()
+		{
+			auto node = pop_front_node();
 			if (node)
+			{
+				T data = node->data;
 				delete node;
-	}
-
-	struct Iterator
-	{
-		using iterator_category = std::forward_iterator_tag;
-		using difference_type = std::ptrdiff_t;
-		using value_type = const Node *;
-		using pointer = value_type;
-		using reference = value_type;
-
-		Iterator(pointer ptr) : m_ptr(ptr)
-		{
+				return data;
+			}
+			return (T)NULL;
 		}
 
-		reference operator*() const { return m_ptr; }
-		pointer operator->() { return m_ptr; }
-		Iterator &operator++()
+		T pop_back()
 		{
-			m_ptr = m_ptr->next;
-			return *this;
-		}
-		Iterator operator++(int)
-		{
-			Iterator tmp = *this;
-			++(*this);
-			return tmp;
+			auto node = pop_back_node();
+			if (node)
+			{
+				T data = node->data;
+				delete node;
+				return data;
+			}
+			return (T)NULL;
 		}
 
-		friend bool operator==(const Iterator &a, const Iterator &b)
+		node *pop_front_node()
 		{
-			return a.m_ptr == b.m_ptr;
+			if (!head && !tail)
+				return nullptr;
+			if (head == tail)
+			{
+				node *popped = head;
+				head = nullptr;
+				tail = nullptr;
+				return popped;
+			}
+			node *popped = head;
+			head = head->next;
+			return popped;
 		}
-		friend bool operator!=(const Iterator &a, const Iterator &b)
+
+		node *pop_back_node()
 		{
-			return a.m_ptr != b.m_ptr;
+			if (!head && !tail)
+				return nullptr;
+			if (head == tail)
+			{
+				node *popped = head;
+				head = nullptr;
+				tail = nullptr;
+				return popped;
+			}
+			node *beforeTail = head;
+			do
+				if (beforeTail->next == tail)
+					break;
+			while (beforeTail = beforeTail->next);
+			node *popped = tail;
+			beforeTail->next = nullptr;
+			tail = beforeTail;
+			return popped;
+		}
+
+#ifdef LK_LIST_TO_STR
+		std::string to_string()
+		{
+			if (!head && !tail)
+				return "";
+			std::ostringstream oss;
+			node *node = head;
+			do
+				oss << node->data << (node->next ? "->" : "");
+			while (node = node->next);
+			return oss.str();
+		}
+#endif
+
+		void clear()
+		{
+			while (node *node = pop_front_node())
+				if (node)
+					delete node;
+		}
+
+		struct iterator
+		{
+			using iterator_category = std::forward_iterator_tag;
+			using difference_type = std::ptrdiff_t;
+			using value_type = const node *;
+			using pointer = value_type;
+			using reference = value_type;
+
+			iterator(pointer ptr) : m_ptr(ptr)
+			{
+			}
+
+			reference operator*() const { return m_ptr; }
+			pointer operator->() { return m_ptr; }
+			iterator &operator++()
+			{
+				m_ptr = m_ptr->next;
+				return *this;
+			}
+			iterator operator++(int)
+			{
+				iterator tmp = *this;
+				++(*this);
+				return tmp;
+			}
+
+			friend bool operator==(const iterator &a, const iterator &b)
+			{
+				return a.m_ptr == b.m_ptr;
+			}
+			friend bool operator!=(const iterator &a, const iterator &b)
+			{
+				return a.m_ptr != b.m_ptr;
+			}
+
+		private:
+			pointer m_ptr;
+		};
+
+		iterator begin()
+		{
+			return iterator(head);
+		}
+
+		iterator end()
+		{
+			return iterator(nullptr);
 		}
 
 	private:
-		pointer m_ptr;
+		size_t length = 0;
 	};
 
-	Iterator begin()
-	{
-		return Iterator(head);
-	}
-
-	Iterator end()
-	{
-		return Iterator(nullptr);
-	}
-};
-
-template <typename T>
-using LkList = LinkedList<T>;
+	template <typename T>
+	using lk_list = linked_list<T>;
+}
 
 #endif
