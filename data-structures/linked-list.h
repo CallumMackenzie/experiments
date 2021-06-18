@@ -173,6 +173,17 @@ namespace dst
 					delete node;
 		}
 
+		node *operator[](size_t index)
+		{
+			if (index > length || index < 0)
+				return nullptr;
+			node *node = nullptr;
+			node = head;
+			for (size_t i = 0; i < index; i++)
+				node = node->next;
+			return node;
+		}
+
 		struct iterator
 		{
 			using iterator_category = std::forward_iterator_tag;
