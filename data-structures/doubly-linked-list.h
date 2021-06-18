@@ -289,7 +289,7 @@ namespace dst
 			else
 			{
 				node = tail;
-				for (int i = length; i > 0; i--)
+				for (size_t i = length; i > 0; i--)
 					node = node->prev;
 			}
 			return node;

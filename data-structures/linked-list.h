@@ -77,6 +77,7 @@ namespace dst
 				tail->next = node;
 				tail = node;
 			}
+			length++;
 		}
 
 		void push_front_node(node *node)
@@ -88,6 +89,7 @@ namespace dst
 				node->next = head;
 				head = node;
 			}
+			length++;
 		}
 
 		T pop_front()
@@ -118,6 +120,7 @@ namespace dst
 		{
 			if (!head && !tail)
 				return nullptr;
+			length--;
 			if (head == tail)
 			{
 				node *popped = head;
@@ -134,6 +137,7 @@ namespace dst
 		{
 			if (!head && !tail)
 				return nullptr;
+			length--;
 			if (head == tail)
 			{
 				node *popped = head;
@@ -175,10 +179,9 @@ namespace dst
 
 		node *operator[](size_t index)
 		{
-			if (index > length || index < 0)
+			if (index >= length || index < 0)
 				return nullptr;
-			node *node = nullptr;
-			node = head;
+			node *node = head;
 			for (size_t i = 0; i < index; i++)
 				node = node->next;
 			return node;

@@ -34,6 +34,11 @@ namespace dst
 			return length;
 		}
 
+		T operator[](size_t index)
+		{
+			return arr[index];
+		}
+
 #ifdef DST_ARRAY_TO_STR
 		std::string to_string()
 		{
