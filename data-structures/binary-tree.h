@@ -10,7 +10,28 @@ namespace dst
 		{
 			branch *left = nullptr;
 			branch *right = nullptr;
+			branch *parent = nullptr;
 			T data;
+
+			branch(T data)
+			{
+				this->data = data;
+			}
+
+			branch(T data, branch *parent) : branch(data)
+			{
+				this->parent = parent;
+			}
+
+			void set_left(T data)
+			{
+				left = new branch(data, this);
+			}
+
+			void set_right(T data)
+			{
+				right = new branch(data, this);
+			}
 
 			void invert()
 			{
@@ -19,24 +40,81 @@ namespace dst
 				left = tmp_right;
 				right = tmp_left;
 			}
+			void clear()
+			{
+				if (left)
+					delete left;
+				if (right)
+					delete right;
+				left = nullptr;
+				right = nullptr;
+				parent = nullptr;
+			}
+			void clear_recursive()
+			{
+				if (left)
+				{
+					left->clear_recursive();
+					delete left;
+				}
+				if (right)
+				{
+					right->clear_recursive();
+					delete right;
+				}
+			}
 		};
 
-		branch *root;
+		branch *root = nullptr;
+
+		binary_tree()
+		{
+		}
 
 		void invert()
 		{
 			invert_branch_recursive(root);
 		}
 
-		void invert_branch_recursive(branch *branch)
+		void invert_branch_recursive(branch *br)
 		{
-			if (!branch)
+			if (!br)
 				return;
-			branch->invert();
-			if (branch->left)
-				invert_branch_recursive(branch->left);
-			if (branch->right)
-				invert_branch_recursive(branch->right);
+			br->invert();
+			if (br->left)
+				invert_branch_recursive(br->left);
+			if (br->right)
+				invert_branch_recursive(br->right);
+		}
+
+		void clear()
+		{
+			if (root)
+			{
+				root->clear_recursive();
+				delete root;
+				root = nullptr;
+			}
+		}
+
+		void set_root(T data)
+		{
+			root = new branch(data);
+		}
+
+		size_t size()
+		{
+			return size(root);
+		}
+
+		static size_t size(branch *start)
+		{
+			if (!start)
+				return 0;
+			size_t branch_size = 1;
+			branch_size += size(start->left);
+			branch_size += size(start->right);
+			return branch_size;
 		}
 	};
 };

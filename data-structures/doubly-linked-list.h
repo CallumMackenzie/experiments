@@ -233,31 +233,31 @@ namespace dst
 			length++;
 		}
 
-		void insert_after_node(const size_t index, node *node)
+		void insert_after_node(const size_t index, node *insert)
 		{
 			node *target = (*this)[index];
 			if (!target)
 				return;
 			if (target == tail)
-				return push_back_node(node);
-			target->next->prev = node;
-			node->next = target->next;
-			target->next = node;
-			node->prev = target;
+				return push_back_node(insert);
+			target->next->prev = insert;
+			insert->next = target->next;
+			target->next = insert;
+			insert->prev = target;
 			length++;
 		}
 
-		void insert_before_node(const size_t index, node *node)
+		void insert_before_node(const size_t index, node *insert)
 		{
 			node *target = (*this)[index];
 			if (!target)
 				return;
 			if (target == head)
-				return push_front_node(node);
-			target->prev->next = node;
-			node->prev = target->prev;
-			node->next = target;
-			target->prev = node;
+				return push_front_node(insert);
+			target->prev->next = insert;
+			insert->prev = target->prev;
+			insert->next = target;
+			target->prev = insert;
 			length++;
 		}
 

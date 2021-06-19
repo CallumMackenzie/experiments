@@ -44,6 +44,20 @@
 		"xmemory": "cpp",
 		"xstddef": "cpp",
 		"xtr1common": "cpp",
-		"xutility": "cpp"
+		"xutility": "cpp",
+		"functional": "cpp",
+		"array": "cpp",
+		"string_view": "cpp",
+		"*.tcc": "cpp",
+		"clocale": "cpp",
+		"cstdarg": "cpp",
+		"cwctype": "cpp",
+		"deque": "cpp",
+		"algorithm": "cpp",
+		"memory_resource": "cpp",
+		"numeric": "cpp",
+		"optional": "cpp",
+		"random": "cpp",
+		"fstream": "cpp"
 	}
 }
