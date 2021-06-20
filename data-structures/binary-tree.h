@@ -25,15 +25,19 @@ namespace dst
 				this->parent = parent;
 			}
 
-			// Creates a new branch from the data input, assigning it to the left.
+			// Creates a new branch from the data input, assigning it to the left. If there is a branch already, it is freed.
 			void set_left(T data)
 			{
+				if (left)
+					delete left->pop()->delete_recursive();
 				left = new branch(data, this);
 			}
 
-			// Creates a new branch from the data input, assigning it to the right.
+			// Creates a new branch from the data input, assigning it to the right. If there is a branch present already, it is freed.
 			void set_right(T data)
 			{
+				if (right)
+					delete right->pop()->delete_recursive();
 				right = new branch(data, this);
 			}
 

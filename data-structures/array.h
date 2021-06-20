@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <initializer_list>
+#include <string.h>
 
 #ifdef DST_ARRAY_TO_STR
 #include <sstream>
