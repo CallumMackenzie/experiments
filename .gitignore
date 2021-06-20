@@ -21,3 +21,4 @@ data-structures
 *.vcxproj.filters
 *.tmp
 *.sln
+*.class
