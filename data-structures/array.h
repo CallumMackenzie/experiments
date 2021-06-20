@@ -2,8 +2,12 @@
 #define ARRAY_CST_H 1
 
 #include <vector>
+#include <initializer_list>
+
+#ifdef DST_ARRAY_TO_STR
 #include <sstream>
 #include <string>
+#endif
 
 namespace dst
 {
@@ -19,24 +23,31 @@ namespace dst
 		}
 
 		// Creates a new array with the given vector.
-		array(std::vector<T> init)
+		array(std::vector<T> init) : array(init.size())
 		{
-			length = init.size();
-			arr = new T[length];
 			for (size_t i = 0; i < length; i++)
 				arr[i] = init[i];
 		}
 
 		// Creates a new array with the given size, populating it with the contents of the vector.
-		array(size_t size, std::vector<T> init)
+		array(size_t size, std::vector<T> init) : array(size)
 		{
-			length = size;
-			arr = new T[length];
 			for (size_t i = 0; i < length; i++)
 				if (i < init.size())
 					arr[i] = init[i];
 				else
 					break;
+		}
+
+		// Creates a new array from an initializer list.
+		array(std::initializer_list<T> list) : array(list.size())
+		{
+			size_t i = 0;
+			for (auto item : list)
+			{
+				arr[i] = item;
+				++i;
+			}
 		}
 
 		~array()

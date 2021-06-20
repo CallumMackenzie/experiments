@@ -2,6 +2,7 @@
 #define DOUBLY_LINKED_LIST_H 1
 
 #include <vector>
+#include <initializer_list>
 
 #ifdef DLK_LIST_TO_STR
 #include <sstream>
@@ -34,8 +35,15 @@ namespace dst
 		// Creates a new doubly linked list and populates it with the contents of the input vector.
 		doubly_linked_list<T>(std::vector<T> init)
 		{
-			for (int i = 0; i < init.size(); i++)
-				push_back(init[i]);
+			for (auto i : init)
+				push_back(i);
+		}
+
+		// Creates a new doubly linked list from an initializer list.
+		doubly_linked_list<T>(std::initializer_list<T> list)
+		{
+			for (auto i : list)
+				push_back(i);
 		}
 
 		~doubly_linked_list<T>()

@@ -2,6 +2,7 @@
 #define LINKED_LIST_H 1
 
 #include <vector>
+#include <initializer_list>
 
 #ifdef LK_LIST_TO_STR
 #include <sstream>
@@ -35,6 +36,13 @@ namespace dst
 		{
 			for (auto item : data)
 				push_back(item);
+		}
+
+		// Creates a new linked list from an initializer list.
+		linked_list<T>(std::initializer_list<T> init)
+		{
+			for (auto i : init)
+				push_back(i);
 		}
 
 		~linked_list<T>()

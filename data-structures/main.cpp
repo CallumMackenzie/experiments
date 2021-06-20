@@ -21,21 +21,21 @@ int main(int argc, char **argv)
 
     {
         header("DST::LK_LIST");
-        auto lkList = dst::lk_list<char>(std::vector<char>{'a', 'b', 'c', 'd'});
+        auto lkList = dst::lk_list<char>{'a', 'b', 'c', 'd'};
         for (auto i : lkList)
             std::cout << i->data << std::endl;
         std::cout << "2: " << lkList[2]->data << std::endl;
         lkList.clear();
 
         header("DST::DLK_LIST");
-        auto dlkList = dst::dlk_list<char>(std::vector<char>{'w', 'x', 'y', 'z'});
+        auto dlkList = dst::dlk_list<char>{'w', 'x', 'y', 'z'};
         for (auto i : dlkList)
             std::cout << i->data << std::endl;
         std::cout << "2: " << dlkList[2]->data << std::endl;
         dlkList.clear();
 
         header("DST::ARRAY");
-        auto arr = dst::array<int>(3, std::vector<int>{1, 2, 3, 4});
+        auto arr = dst::array<int>{1, 2, 3, 4};
         for (auto i : arr)
             std::cout << i << std::endl;
         std::cout << "2: " << arr[2] << std::endl;
