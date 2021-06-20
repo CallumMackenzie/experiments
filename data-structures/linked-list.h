@@ -10,24 +10,27 @@
 
 namespace dst
 {
-	// A linked list class
+	// A linked list with push & pop methods and an iterator.
 	template <typename T>
 	struct linked_list
 	{
+		// A linked list node.
 		struct node
 		{
-			node *next;
-			T data;
+			node *next; // The next node in the list.
+			T data;		// The data held in the node.
 		};
 
-		node *head = nullptr;		// First node (start)
-		node *tail = nullptr;		// Last node (end)
-		bool clear_on_free = false; // whether to delete nodes when the list is freed
+		node *head = nullptr;		// The front node of the list.
+		node *tail = nullptr;		// The back node of the list.
+		bool clear_on_free = false; // Whether to delete nodes when the list is freed.
 
+		// Creates a new linked list with default values.
 		linked_list<T>()
 		{
 		}
 
+		// Creates a new linked list and populates it with the value from the given vector.
 		linked_list<T>(std::vector<T> data)
 		{
 			for (auto item : data)
@@ -40,6 +43,7 @@ namespace dst
 				clear();
 		}
 
+		// Returns the number of nodes in the list after counting them.
 		size_t size_check()
 		{
 			if (!head && !tail)
@@ -49,25 +53,28 @@ namespace dst
 			do
 				elems++;
 			while (node = node->next);
-			length = elems;
-			return elems;
+			return (length = elems);
 		}
 
+		// Returns the length of the list.
 		size_t size()
 		{
 			return length;
 		}
 
+		// Creates a new node with the given data and pushes it onto the front of the list.
 		void push_front(T data)
 		{
 			push_front_node(new node{nullptr, data});
 		}
 
+		// Creates a new node with the given data and pushes it onto the back of the list.
 		void push_back(T data)
 		{
 			push_back_node(new node{nullptr, data});
 		}
 
+		// Pushes the given node onto the back of the list.
 		void push_back_node(node *node)
 		{
 			if (!tail && !head)
@@ -80,6 +87,7 @@ namespace dst
 			++length;
 		}
 
+		// Pushes the given node onto the front of the list.
 		void push_front_node(node *node)
 		{
 			if (!tail && !head)
@@ -92,6 +100,7 @@ namespace dst
 			++length;
 		}
 
+		// Frees the front node and returns its data.
 		T pop_front()
 		{
 			auto node = pop_front_node();
@@ -104,6 +113,7 @@ namespace dst
 			return (T)NULL;
 		}
 
+		// Frees the back node and returns its data.
 		T pop_back()
 		{
 			auto node = pop_back_node();
@@ -116,6 +126,7 @@ namespace dst
 			return (T)NULL;
 		}
 
+		// Pops the front node off the list and returns it.
 		node *pop_front_node()
 		{
 			if (!head && !tail)
@@ -133,6 +144,7 @@ namespace dst
 			return popped;
 		}
 
+		// Pops the back node off the list and returns it.
 		node *pop_back_node()
 		{
 			if (!head && !tail)
@@ -170,6 +182,7 @@ namespace dst
 		}
 #endif
 
+		// Frees all nodes in the list.
 		void clear()
 		{
 			while (node *node = pop_front_node())
@@ -177,6 +190,7 @@ namespace dst
 					delete node;
 		}
 
+		// Returns the node at the given index in the list.
 		node *operator[](size_t index)
 		{
 			if (index >= length || index < 0)
@@ -226,11 +240,13 @@ namespace dst
 			pointer m_ptr;
 		};
 
+		// An iterator with the beginning of the list.
 		iterator begin()
 		{
 			return iterator(head);
 		}
 
+		// An iterator with the end of the list (nullptr).
 		iterator end()
 		{
 			return iterator(nullptr);

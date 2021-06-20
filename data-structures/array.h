@@ -7,15 +7,18 @@
 
 namespace dst
 {
+	// A simple array wrapper with a fixed size and iterator.
 	template <typename T>
 	struct array
 	{
+		// Creates a new array with the given length.
 		array(const size_t size)
 		{
 			length = size;
 			arr = new T[length];
 		}
 
+		// Creates a new array with the given vector.
 		array(std::vector<T> init)
 		{
 			length = init.size();
@@ -24,16 +27,30 @@ namespace dst
 				arr[i] = init[i];
 		}
 
+		// Creates a new array with the given size, populating it with the contents of the vector.
+		array(size_t size, std::vector<T> init)
+		{
+			length = size;
+			arr = new T[length];
+			for (size_t i = 0; i < length; i++)
+				if (i < init.size())
+					arr[i] = init[i];
+				else
+					break;
+		}
+
 		~array()
 		{
 			delete[] arr;
 		}
 
+		// Returns the length of the array.
 		size_t size()
 		{
 			return length;
 		}
 
+		// Returns the data at the given index.
 		T operator[](size_t index)
 		{
 			return arr[index];
@@ -88,11 +105,13 @@ namespace dst
 			pointer m_ptr;
 		};
 
+		// An iterator repersenting the start of the array.
 		iterator begin()
 		{
 			return iterator(&arr[0]);
 		}
 
+		// An iterator repersenting the end of the array.
 		iterator end()
 		{
 			return iterator(&arr[length]);

@@ -10,24 +10,28 @@
 
 namespace dst
 {
+	// A doubly linked list with a number of pop & push methods and an iterator.
 	template <typename T>
 	struct doubly_linked_list
 	{
+		// A doubly linked list node.
 		struct node
 		{
-			node *next = nullptr;
-			node *prev = nullptr;
-			T data;
+			node *next = nullptr; // The next node in the list.
+			node *prev = nullptr; // The previous node in the list.
+			T data;				  // The data held in the node.
 		};
 
-		node *head = nullptr;		// Start node (first)
-		node *tail = nullptr;		// End node (last)
-		bool clear_on_free = false; // Whether to delete nodes when the list is freed
+		node *head = nullptr;		// The front node in the list.
+		node *tail = nullptr;		// The back node in the list.
+		bool clear_on_free = false; // Whether to delete nodes when the list is freed.
 
+		// Creates a new doubly linked list with default values.
 		doubly_linked_list<T>()
 		{
 		}
 
+		// Creates a new doubly linked list and populates it with the contents of the input vector.
 		doubly_linked_list<T>(std::vector<T> init)
 		{
 			for (int i = 0; i < init.size(); i++)
@@ -40,6 +44,7 @@ namespace dst
 				clear();
 		}
 
+		// Frees all nodes in the list.
 		void clear()
 		{
 			while (node *node = pop_back_node())
@@ -47,6 +52,7 @@ namespace dst
 					delete node;
 		}
 
+		// Does a full check of the list size and returns it.
 		size_t size_check()
 		{
 			if (!head && !tail)
@@ -56,15 +62,16 @@ namespace dst
 			do
 				elems++;
 			while (node = node->next);
-			length = elems;
-			return elems;
+			return (length = elems);
 		}
 
+		// Returns the size of the list.
 		size_t size()
 		{
 			return length;
 		}
 
+		// Pops the front node off, frees it, and returns the data.
 		T pop_front()
 		{
 			auto node = pop_front_node();
@@ -77,6 +84,7 @@ namespace dst
 			return NULL;
 		}
 
+		// Pops the back node off, frees it, and returns the data.
 		T pop_back()
 		{
 			auto node = pop_back_node();
@@ -89,6 +97,7 @@ namespace dst
 			return NULL;
 		}
 
+		// Pops the node off at the given index, frees it, and returns the data.
 		T pop(size_t index)
 		{
 			auto node = pop_node(index);
@@ -101,6 +110,7 @@ namespace dst
 			return NULL;
 		}
 
+		// Pops the front node off the list and returns it.
 		node *pop_front_node()
 		{
 			if (!head && !tail)
@@ -120,6 +130,7 @@ namespace dst
 			return popped;
 		}
 
+		// Pops the back node off the list and returns it.
 		node *pop_back_node()
 		{
 			if (!head && !tail)
@@ -139,6 +150,7 @@ namespace dst
 			return popped;
 		}
 
+		// Pops the node at the given index off the list and returns it.
 		node *pop_node(const size_t index)
 		{
 			if (!head && !tail)
@@ -167,36 +179,43 @@ namespace dst
 			return popped;
 		}
 
+		// Creates a new node with the given data and pushes it onto the back of the list.
 		void push_back(T data)
 		{
 			push_back_node(new node{nullptr, nullptr, data});
 		}
 
+		// Creates a new node with the given data and pushes it onto the front of the list.
 		void push_front(T data)
 		{
 			push_front_node(new node{nullptr, nullptr, data});
 		}
 
+		// Creates a new node with the given data and inserts it after the node at the given index.
 		void insert_after(const size_t index, T data)
 		{
 			insert_after_node(index, new node{nullptr, nullptr, data});
 		}
 
+		// Creates a new node with the given data and inserts it before the node at the given index.
 		void insert_before(const size_t index, T data)
 		{
 			insert_before_node(index, new node{nullptr, nullptr, data});
 		}
 
+		// Returns the data held in the front node.
 		T front()
 		{
 			return head->data;
 		}
 
+		// Returns the data held in the back node.
 		T back()
 		{
 			return tail->data;
 		}
 
+		// Pushes the given node onto the back of the list.
 		void push_back_node(node *node)
 		{
 			if (!head && !tail)
@@ -215,6 +234,7 @@ namespace dst
 			length++;
 		}
 
+		// Pushes the given node onto the front of the list.
 		void push_front_node(node *node)
 		{
 			if (!head && !tail)
@@ -233,6 +253,7 @@ namespace dst
 			length++;
 		}
 
+		// Inserts the given node after the node at the given index.
 		void insert_after_node(const size_t index, node *insert)
 		{
 			node *target = (*this)[index];
@@ -247,6 +268,7 @@ namespace dst
 			length++;
 		}
 
+		// Inserts the given node before the node at the given index.
 		void insert_before_node(const size_t index, node *insert)
 		{
 			node *target = (*this)[index];
@@ -275,6 +297,7 @@ namespace dst
 		}
 #endif
 
+		// Returns the node at the given index in the list.
 		node *operator[](const size_t index)
 		{
 			if (index >= length || index < 0)
@@ -345,11 +368,13 @@ namespace dst
 			pointer m_ptr;
 		};
 
+		// An iterator with the start of the list.
 		iterator begin()
 		{
 			return iterator(head);
 		}
 
+		// An iterator with the end of the list (nullptr);
 		iterator end()
 		{
 			return iterator(nullptr);

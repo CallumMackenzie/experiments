@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         dlkList.clear();
 
         header("DST::ARRAY");
-        auto arr = dst::array<int>(std::vector<int>{1, 2, 3, 4});
+        auto arr = dst::array<int>(3, std::vector<int>{1, 2, 3, 4});
         for (auto i : arr)
             std::cout << i << std::endl;
         std::cout << "2: " << arr[2] << std::endl;
@@ -52,6 +52,7 @@ int main(int argc, char **argv)
         btree.root->right->set_left(8);
         btree.root->right->left->set_left(9);
         btree.root->right->right->set_left(10);
+        delete btree.root->right->pop()->delete_recursive();
         btree.invert();
         std::cout << "length: " << btree.size() << std::endl;
         btree.clear();
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
         tree.get(1)->add(9);
         tree.get(1)->get(0)->add(10);
         tree.get(2)->get(0)->add(11);
+        delete tree.get(2)->pop()->delete_recursive();
         std::cout << "length: " << tree.size() << std::endl;
         tree.clear();
     }
