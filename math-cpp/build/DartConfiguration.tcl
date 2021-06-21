@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/callum/experiments/first-jni-test
-BuildDirectory: /home/callum/experiments/first-jni-test/build
+SourceDirectory: /home/callum/experiments/math-cpp
+BuildDirectory: /home/callum/experiments/math-cpp/build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -36,7 +36,7 @@ ScpCommand: /usr/bin/scp
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/usr/bin/cmake" "/home/callum/experiments/first-jni-test"
+ConfigureCommand: "/usr/bin/cmake" "/home/callum/experiments/math-cpp"
 MakeCommand: /usr/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}" -- -i
 DefaultCTestConfigurationType: Release
 

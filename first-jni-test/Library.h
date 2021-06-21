@@ -9,11 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     Library
- * Method:    first_70_fib_cpp
- * Signature: ()[J
+ * Method:    first_fib_cpp
+ * Signature: (I)[J
  */
-JNIEXPORT jlongArray JNICALL Java_Library_first_170_1fib_1cpp
-  (JNIEnv *, jobject);
+JNIEXPORT jlongArray JNICALL Java_Library_first_1fib_1cpp
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

@@ -2,21 +2,21 @@
 #include <iostream>
 #include "Library.h"
 
-JNIEXPORT jint JNICALL Java_Library_squared(JNIEnv *env, jobject thisObj, jint input)
+JNIEXPORT jlongArray JNICALL Java_Library_first_1fib_1cpp(JNIEnv *env, jobject jthis, jint len)
 {
-	return input * input;
-}
+	jlongArray jlarray = env->NewLongArray(len);
+	jlong *arr = new jlong[len];
 
-JNIEXPORT jlong JNICALL Java_Library_fibonacci(JNIEnv *env, jobject this_, jint num)
-{
-	jlong before = 0;
-	jlong before_before = 1;
-	jlong fib = 0;
-	for (jint i = 0; i < num; i++)
+	for (jint i = 0; i < len; i++)
 	{
-		fib = before + before_before;
-		before_before = before;
-		before = fib;
+		if (i == 0)
+			arr[i] = 0;
+		else if (i == 1)
+			arr[i] = 1;
+		else
+			arr[i] = arr[i - 1] + arr[i - 2];
 	}
-	return fib;
+	env->SetLongArrayRegion(jlarray, 0, len, arr);
+
+	return jlarray;
 }
