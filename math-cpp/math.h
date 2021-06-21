@@ -66,25 +66,23 @@ typedef long double vec_hash;
 	PARTIAL_EQ(TYPE);      \
 	OSTREAM_OP(TYPE);
 
-#define VEC_NAME nvec
-#define L_VEC_NAME lvec
-
 template <typename T, size_t LEN>
-struct VEC_NAME
+class nvec
 {
+public:
 	static const size_t length = LEN;
 	T vec[LEN];
 
-	VEC_NAME() {}
+	nvec() {}
 
-	VEC_NAME(std::initializer_list<T> list)
+	nvec(std::initializer_list<T> list)
 	{
 		size_t i = -1;
 		for (auto item : list)
 			vec[++i] = item;
 	}
 
-	FULL_NUMERIC(VEC_NAME)
+	FULL_NUMERIC(nvec)
 
 	T operator[](size_t index)
 	{
@@ -105,154 +103,101 @@ struct VEC_NAME
 		return ret;
 	}
 
-	// inline vec_hash hash(VEC_NAME v);
+	// inline vec_hash hash(nvec v);
 };
 
-#define SWIZZ(RT1, RT2, FN_NAME, ...) \
-	RT1, RT2 FN_NAME()                \
-	{                                 \
-		return RT1, RT2{__VA_ARGS__}; \
-	}
+#define LVEC_DECL(NUM_ELEMS)        \
+	template <typename T, size_t N> \
+	class lvec##NUM_ELEMS;          \
+	template <typename T>           \
+	using lv##NUM_ELEMS = lvec##NUM_ELEMS<T, NUM_ELEMS>;
 
-#define REF(TYPE, INDEX, FN_NAME) \
-	TYPE &FN_NAME = this->vec[INDEX];
+LVEC_DECL(1)
+LVEC_DECL(2)
+LVEC_DECL(3)
+LVEC_DECL(4)
 
-#define REF_1(TYPE, L1) REF(TYPE, 0, L1)
+template <typename T, size_t NELEMS = 1>
+class lvec1 : public nvec<T, NELEMS>
+{
+private:
+	using parent = nvec<T, NELEMS>;
 
-#define REF_2(TYPE, L1, L2) \
-	REF_1(TYPE, L1)         \
-	REF(TYPE, 1, L2)
+public:
+	lvec1() : parent() {}
+	lvec1(std::initializer_list<T> list) : parent(list) {}
+	T &x = this->vec[0];
+	lv2<T> xx() { return lv2<T>{x, x}; }
+	lv3<T> xxx() { return lv3<T>{x, x, x}; }
+	lv4<T> xxxx() { return lv4<T>{x, x, x, x}; }
+};
 
-#define REF_3(TYPE, L1, L2, L3) \
-	REF_2(TYPE, L1, L2)         \
-	REF(TYPE, 2, L3)            \
-	SWIZZ(L_VEC_NAME<T, 2>, L1##L2, L1, L2)
+template <typename T, size_t NELEMS = 2>
+class lvec2 : public lvec1<T, NELEMS>
+{
+private:
+	using parent = lvec1<T, NELEMS>;
 
-#define REF_4(TYPE, L1, L2, L3, L4) \
-	REF_3(TYPE, L1, L2, L3)         \
-	REF(TYPE, 3, L4)                \
-	SWIZZ(L_VEC_NAME<T, 3>, L1##L2##L3, L1, L2, L3)
+public:
+	lvec2() : parent() {}
+	lvec2(std::initializer_list<T> list) : parent(list) {}
+	T &y = this->vec[1];
 
-#define REF_5(TYPE, L1, L2, L3, L4, L5) \
-	REF_4(TYPE, L1, L2, L3, L4)         \
-	REF(TYPE, 4, L5)                    \
-	SWIZZ(L_VEC_NAME<T, 4>, L1##L2##L3##L4, L1, L2, L3, L4)
+	lv4<T> yyyy() { return lv4<T>{y, y, y, y}; }
+	lv3<T> yyy() { return lv3<T>{y, y, y}; }
+	lv2<T> yy() { return lv2<T>{y, y}; }
+	lv2<T> yx() { return lv2<T>{y, this->x}; }
+	lv2<T> xy() { return lv2<T>{this->x, y}; }
+	lv3<T> xxy() { return lv3<T>{this->x, this->x, y}; }
+	lv3<T> xyy() { return lv3<T>{this->x, y, y}; }
+	lv3<T> yxx() { return lv3<T>{y, this->x, this->x}; }
+	lv3<T> yyx() { return lv3<T>{y, y, this->x}; }
+	lv3<T> xyx() { return lv3<T>{this->x, y, this->x}; }
+};
 
-#define REF_6(TYPE, L1, L2, L3, L4, L5, L6) \
-	REF_5(TYPE, L1, L2, L3, L4, L5)         \
-	REF(TYPE, 5, L6)                        \
-	SWIZZ(L_VEC_NAME<T, 5>, L1##L2##L3##L4##L5, L1, L2, L3, L4, L5)
+template <typename T, size_t NELEMS = 3>
+class lvec3 : public lvec2<T, NELEMS>
+{
+private:
+	using parent = lvec2<T, NELEMS>;
 
-#define SELECTOR(x, L1, L2, L3, L4, L5, L6, FUNC, ...) FUNC
+public:
+	lvec3() : parent() {}
+	lvec3(std::initializer_list<T> list) : parent(list) {}
+	T &z = this->vec[2];
 
-#define SELECT(SELECT, ARG, ...) SELECTOR(, ##__VA_ARGS__,              \
-										  SELECT##_6(ARG, __VA_ARGS__), \
-										  SELECT##_5(ARG, __VA_ARGS__), \
-										  SELECT##_4(ARG, __VA_ARGS__), \
-										  SELECT##_3(ARG, __VA_ARGS__), \
-										  SELECT##_2(ARG, __VA_ARGS__), \
-										  SELECT##_1(ARG, __VA_ARGS__), \
-										  SELECT##_0(ARG, __VA_ARGS__))
+	lv2<T> zz() { return lv2<T>{z, z}; }
+	lv3<T> zzz() { return lv3<T>{z, z, z}; }
+	lv4<T> zzzz() { return lv4<T>{z, z, z, z}; }
+	lv3<T> xyz() { return lv3<T>{this->x, this->y, z}; }
+	lv3<T> zyx() { return lv3<T>{z, this->y, this->x}; }
+};
 
-template <typename T, size_t LEN>
-struct L_VEC_NAME;
+template <typename T, size_t NELEMS = 4>
+class lvec4 : public lvec3<T, NELEMS>
+{
+private:
+	using parent = lvec3<T, NELEMS>;
 
-#define LETTER_VEC(NELEMS, letters...)                                           \
-	template <typename T>                                                        \
-	struct L_VEC_NAME<T, NELEMS> : public VEC_NAME<T, NELEMS>                    \
-	{                                                                            \
-		L_VEC_NAME() : VEC_NAME<T, NELEMS>() {}                                  \
-		L_VEC_NAME(std::initializer_list<T> list) : VEC_NAME<T, NELEMS>(list) {} \
-		SELECT(REF, T, ##letters)                                                \
-		static const char *structure() { return #letters; }                      \
+public:
+	lvec4() : parent() {}
+	lvec4(std::initializer_list<T> list) : parent(list) {}
+	T &w = this->vec[3];
+};
+
+#define NEW_LVEC(NUM_ELEMS, PREV_NELEMS, LETTER)                         \
+	template <typename T, size_t NELEMS = NUM_ELEMS>                     \
+	class lvec##NUM_ELEMS : public lvec##PREV_NELEMS<T, NELEMS>          \
+	{                                                                    \
+	private:                                                             \
+		using parent = lvec##PREV_NELEMS<T, NELEMS>;                     \
+                                                                         \
+	public:                                                              \
+		lvec##NUM_ELEMS() : parent() {}                                  \
+		lvec##NUM_ELEMS(std::initializer_list<T> list) : parent(list) {} \
+		T &LETTER = this->vec[PREV_NELEMS];                              \
 	};
 
-// LETTER_VEC(1, x);
-// LETTER_VEC(2, x, y);
-// LETTER_VEC(3, x, y, z);
-// LETTER_VEC(4, x, y, z, a);
-// LETTER_VEC(5, x, y, z, a, b);
-// LETTER_VEC(6, x, y, z, a, b, c);
-
-template <typename T>
-struct lvec<T, 1> : public nvec<T, 1>
-{
-	lvec() : nvec<T, 1>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 1>(list) {}
-	T &x = this->vec[0];
-	static const char *structure() { return "x"; }
-};
-
-template <typename T>
-struct lvec<T, 2> : public nvec<T, 2>
-{
-	lvec() : nvec<T, 2>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 2>(list) {}
-	T &x = this->vec[0];
-	T &y = this->vec[1];
-	static const char *structure() { return "x, y"; }
-};
-
-template <typename T>
-struct lvec<T, 3> : public nvec<T, 3>
-{
-	lvec() : nvec<T, 3>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 3>(list) {}
-	T &x = this->vec[0];
-	T &y = this->vec[1];
-	T &z = this->vec[2];
-	lvec<T, 2> xy() { return lvec<T, 2>{x, y}; }
-	static const char *structure() { return "x, y, z"; }
-};
-
-template <typename T>
-struct lvec<T, 4> : public nvec<T, 4>
-{
-	lvec() : nvec<T, 4>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 4>(list) {}
-	T &x = this->vec[0];
-	T &y = this->vec[1];
-	T &z = this->vec[2];
-	T &a = this->vec[3];
-	lvec<T, 2> xy() { return lvec<T, 2>{x, y}; }
-	lvec<T, 3> xyz() { return lvec<T, 3>{x, y, z}; }
-	static const char *structure() { return "x, y, z, a"; }
-};
-
-template <typename T>
-struct lvec<T, 5> : public nvec<T, 5>
-{
-	lvec() : nvec<T, 5>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 5>(list) {}
-	T &x = this->vec[0];
-	T &y = this->vec[1];
-	T &z = this->vec[2];
-	T &a = this->vec[3];
-	T &b = this->vec[4];
-	lvec<T, 2> xy() { return lvec<T, 2>{x, y}; }
-	lvec<T, 3> xyz() { return lvec<T, 3>{x, y, z}; }
-	lvec<T, 4> xyza() { return lvec<T, 4>{x, y, z, a}; }
-	static const char *structure() { return "x, y, z, a, b"; }
-};
-
-template <typename T>
-struct lvec<T, 6> : public nvec<T, 6>
-{
-	lvec() : nvec<T, 6>() {}
-	lvec(std::initializer_list<T> list) : nvec<T, 6>(list) {}
-	T &x = this->vec[0];
-	T &y = this->vec[1];
-	T &z = this->vec[2];
-	T &a = this->vec[3];
-	T &b = this->vec[4];
-	T &c = this->vec[5];
-	lvec<T, 2> xy() { return lvec<T, 2>{x, y}; }
-	lvec<T, 3> xyz() { return lvec<T, 3>{x, y, z}; }
-	lvec<T, 4> xyza() { return lvec<T, 4>{x, y, z, a}; }
-	lvec<T, 5> xyzab() { return lvec<T, 5>{x, y, z, a, b}; }
-	static const char *structure() { return "x, y, z, a, b, c"; }
-};
-
-typedef L_VEC_NAME<int, 2> vec2i;
+NEW_LVEC(5, 4, a)
 
 #endif

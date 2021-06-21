@@ -14,18 +14,20 @@
 int main(int, char **)
 {
 
-	ASSERT(vec2i{-1, -2} == -vec2i{1, 2});
-	ASSERT(vec2i{2, 3} * vec2i{-3, 4} == vec2i{-6, 12});
-	ASSERT(vec2i{12, 3} + vec2i{2, -1} == vec2i{14, 2});
-	ASSERT(vec2i{9, 2} - vec2i{8, 1} == vec2i{1, 1});
-	ASSERT(vec2i{100, 80} / vec2i{10, 8} == vec2i{10, 10});
-	ASSERT((vec2i{0b111, 0b001} & vec2i{0b101, 0b100}) == vec2i{0b101, 0b000});
-	ASSERT((vec2i{0b110, 0b010} | vec2i{0b101, 0b001}) == vec2i{0b111, 0b011});
-	ASSERT((!vec2i{0b011, 0b111}) == vec2i{0b000, 0b000});
-	ASSERT((vec2i{0b111, 0b101} ^ vec2i{0b010, 0b111}) == vec2i{0b101, 0b010});
+	ASSERT(lvec2<int>{-1, -2} == -lvec2<int>{1, 2});
+	ASSERT(lvec2<int>{2, 3} * lvec2<int>{-3, 4} == lvec2<int>{-6, 12});
+	ASSERT(lvec2<int>{12, 3} + lvec2<int>{2, -1} == lvec2<int>{14, 2});
+	ASSERT(lvec2<int>{9, 2} - lvec2<int>{8, 1} == lvec2<int>{1, 1});
+	ASSERT(lvec2<int>{100, 80} / lvec2<int>{10, 8} == lvec2<int>{10, 10});
+	ASSERT((lvec2<int>{0b111, 0b001} & lvec2<int>{0b101, 0b100}) == lvec2<int>{0b101, 0b000});
+	ASSERT((lvec2<int>{0b110, 0b010} | lvec2<int>{0b101, 0b001}) == lvec2<int>{0b111, 0b011});
+	ASSERT((!lvec2<int>{0b011, 0b111}) == lvec2<int>{0b000, 0b000});
+	ASSERT((lvec2<int>{0b111, 0b101} ^ lvec2<int>{0b010, 0b111}) == lvec2<int>{0b101, 0b010});
 
-	auto v = lvec<int, 4>{1, 2, 3 ,4};
+	auto v = lvec5<int>{1, 2, 3, 4, 5};
 	std::cout << v << std::endl;
-	std::cout << v.xyz() << std::endl;
-
+#define P << ", " <<
+	std::cout << v.x P v.y P v.z P v.w P v.a << std::endl
+			  << v.xx() P v.xxx() P v.xxxx() << std::endl
+			  << v.xy() P v.yx() << std::endl;
 }
