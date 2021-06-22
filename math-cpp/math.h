@@ -3,7 +3,6 @@
 
 #include <initializer_list>
 #include <stddef.h>
-#include <cmath>
 #include <iostream>
 
 namespace cmm
@@ -92,7 +91,7 @@ namespace cmm
 	{
 	public:
 		static const size_t length = LEN;
-		T vec[LEN];
+		T vec[LEN] = {0};
 
 		nvec() {}
 
@@ -137,7 +136,38 @@ namespace cmm
 
 		T len() const
 		{
-			return std::sqrt(dot(*this));
+			return sqrtf(dot(*this));
+		}
+
+		nvec &normalize()
+		{
+			T l = len();
+			if (l != (T)0)
+				for (size_t i = 0; i < LEN; i++)
+					vec[i] /= l;
+			return *this;
+		}
+
+		nvec normalized() const
+		{
+			T l = len();
+			nvec ret;
+			if (l != (T)0)
+				for (size_t i = 0; i < LEN; i++)
+					ret.vec[i] = vec[i] / l;
+			return ret;
+		}
+
+		nvec cross(nvec v2) const
+		{
+			nvec ret;
+			if (LEN == 3)
+			{
+				ret.vec[0] = (vec[1] * v2.vec[2]) - (vec[2] * v2.vec[1]);
+				ret.vec[1] = (vec[2] * v2.vec[0]) - (vec[0] * v2.vec[2]);
+				ret.vec[2] = (vec[0] * v2.vec[1]) - (vec[1] * v2.vec[0]);
+			}
+			return ret;
 		}
 
 		std::string to_string() const
@@ -348,6 +378,34 @@ namespace cmm
 				for (size_t c = 0; c < H; c++)
 					for (size_t i = 0; i < W; i++)
 						ret[r][c] += lhs[r][i] * rhs[i][c];
+			return ret;
+		}
+
+		friend nvec<T, H> operator*(const mat<T, W, H> &lhs, const nvec<T, W> &rhs)
+		{
+			nvec<T, H> ret;
+			for (size_t r = 0; r < H; r++)
+				for (size_t c = 0; c < W; c++)
+					ret.vec[r] += rhs[c] * lhs[r][c];
+			return ret;
+		}
+
+		static mat<T, 4, 4> projection(T fovDeg, T aspectRatio, T near, T far)
+		{
+			T fovRad = (T)1 / tanf((fovDeg * (T)((T)377 / (T)120) / (T)180));
+			T zero = (T)0;
+			mat<T, 4, 4> ret{{fovRad * aspectRatio, zero, zero, zero},
+							 {zero, fovRad, zero, zero},
+							 {zero, zero, far / (far - near), (T)1},
+							 {zero, zero, (-far * near) / (far - near), zero}};
+			return ret;
+		}
+
+		static mat identity()
+		{
+			mat ret;
+			for (size_t i = 0; i < (W > H ? H : W); i++)
+				ret[i][i] = (T)1;
 			return ret;
 		}
 

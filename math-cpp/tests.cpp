@@ -52,6 +52,12 @@ int main(int, char **)
 		auto mt2 = mat<int, 2, 3>{{7, 8}, {9, 10}, {11, 12}};
 		auto mt3 = mt * mt2;
 		std::cout << mt3 << std::endl;
+
+		auto mt4 = mat<int, 3, 2>{{1, -1, 2}, {0, -3, 1}};
+		auto mprv = lvec3<int>{2, 1, 0};
+		std::cout << mt4 * mprv << std::endl;
+
+		std::cout << mat<int, 4, 4>::identity() << std::endl;
 	}
 	PRINT_MEMORY_SUMMARY
 }
