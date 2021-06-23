@@ -409,8 +409,92 @@ namespace cmm
 			return ret;
 		}
 
+		static mat<T, 4, 4> lookAt(nvec<T, 3> pos, nvec<T, 3> target, nvec<T, 3> up = nvec<T, 3>{0, 1, 0})
+		{
+			auto new_forward = (target - pos).normalize();
+			auto new_up = (up - (new_forward * up.dot(new_forward))).normalize();
+			auto new_right = new_up.cross(new_forward);
+			auto m = mat<T, 4, 4>{
+				{new_right[0], new_right[1], new_right[2]},
+				{new_up[0], new_up[1], new_up[2]},
+				{new_forward[0], new_forward[1], new_forward[2]},
+				{pos[0], pos[1], pos[2], (T)1}};
+			return m;
+		}
+
+		static mat<T, 4, 4> scale(T x, T y, T z)
+		{
+			auto m = mat<T, 4, 4>::identity();
+			m[0][0] = x;
+			m[1][1] = y;
+			m[2][2] = z;
+			return m;
+		}
+
+		static inline mat<T, 4, 4> scale(const nvec<T, 3> v) 
+		{
+			return scale(v[0], v[1], v[2]);
+		}
+
+		static mat<T, 4, 4> translation(T x, T y, T z) 
+		{
+			auto m = mat<T, 4, 4>::identity();
+			m[3][0] = x;
+			m[3][1] = y;
+			m[3][2] = z;
+			return m;
+		}
+
+		static inline mat<T, 4, 4> translation(const nvec<T, 3> v)
+		{
+			return translation(v[0], v[1], v[2]);
+		}
+
+		static mat<T, 4, 4> x_rotation(T x_rad)
+		{
+			auto m = mat<T, 4, 4>::identity();
+			m[1][1] = cosf(x_rad);
+			m[1][2] = sinf(x_rad);
+			m[2][1] = -sinf(x_rad);
+			m[2][2] = cosf(x_rad);
+			return m;
+		}
+
+		static mat<T, 4, 4> y_rotation(T y_rad)
+		{
+			auto m = mat<T, 4, 4>::identity();
+			m[0][0] = cosf(y_rad);
+			m[0][2] = sinf(y_rad);
+			m[2][0] = -sinf(y_rad);
+			m[2][2] = cosf(y_rad);
+			return m;
+		}
+
+		static mat<T, 4, 4> z_rotation(T z_rad)
+		{
+			auto m = mat<T, 4, 4>::identity();
+			m[0][0] = cosf(z_rad);
+			m[0][1] = sinf(z_rad);
+			m[1][0] = -sinf(z_rad);
+			m[1][1] = cosf(z_rad);
+			return m;
+		}
+
+		static inline mat<T, 4, 4> rotation(T x, T y, T z)
+		{
+			return x_rotation(x) * y_rotation(y) * z_rotation(z);
+		}
+
+		static inline mat<T, 4, 4> rotation(nvec<T, 3> v)
+		{
+			return rotation(v[0], v[1], v[2]);
+		}
+
 		OSTREAM_OP(mat)
 	};
+
+	template<typename T>
+	using mat4 = mat<T, 4, 4>;
 
 }
 

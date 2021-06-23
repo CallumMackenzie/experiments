@@ -58,6 +58,8 @@ int main(int, char **)
 		std::cout << mt4 * mprv << std::endl;
 
 		std::cout << mat<int, 4, 4>::identity() << std::endl;
+
+		std::cout << mat4<double>::translation(2, 3, 2) << std::endl;
 	}
 	PRINT_MEMORY_SUMMARY
 }
