@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <time.h>
 
 #include "memory-aid.h"
 #include "math.h"
@@ -60,6 +61,51 @@ int main(int, char **)
 		std::cout << mat<int, 4, 4>::identity() << std::endl;
 
 		std::cout << mat4<double>::translation(2, 3, 2) << std::endl;
+		std::cout << mat4<double>::scale(2, 3, 2) << std::endl;
+		std::cout << mat4<double>::rotation(2, 3, 2) << std::endl;
+
+		auto v2 = lvec4<double>{1, 2, 3, 1};
+		auto v3 = lvec3<double>{2, 2, 2};
+		std::cout << "Transforming " << v2 << ": " << (mat4<double>::translation(v3) * v2) << std::endl;
+
+		auto start = clock();
+		for (size_t i = 0; i < 33333; i++)
+			auto matt = mat4<double>::translation(i, 0.5 * i, 12 - i);
+		for (size_t i = 0; i < 33333; i++)
+			auto matt = mat4<double>::scale(2, i - 4, 3 * i);
+		for (size_t i = 0; i < 33334; i++)
+			auto matt = mat4<double>{{12, 2, -43, 0}, {122, 31, 32, 1}, {0, 0, 2, 1}, {12, 3, 4, 2}};
+		auto end = ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
+		std::cout << "Done 100,000 mat4 creations in " << end << "ms" << std::endl;
+
+		start = clock();
+		for (size_t i = 0; i < 100000; i++)
+			auto v10 = lvec4<double>{2.0 + i, 12.44, i - 32.5, 1};
+		end = ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
+		std::cout << "Done 100,000 vec4 creations in " << end << "ms" << std::endl;
+
+		auto mtrix = mat4<double>::translation(3, 4, 5) * mat4<double>::scale(2, 0.4, 0.7);
+		auto vectr = lvec4<double>{123, 12, 34, 12};
+		start = clock();
+		for (size_t i = 0; i < 100000; i++)
+			auto prod = mtrix * vectr;
+		end = ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
+		std::cout << "Done 100,000 mat4/vec4 multiplications in " << end << "ms" << std::endl;
+
+		auto mtrix2 = mat4<double>::rotation(3, 4, 5) * mat4<double>::scale(0.33, 3, 2.7);
+		start = clock();
+		for (size_t i = 0; i < 100000; i++)
+			auto prod = mtrix * mtrix2;
+		end = ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
+		std::cout << "Done 100,000 mat4 multiplications in " << end << "ms" << std::endl;
+
+		auto mat2x3 = mat<double, 2, 3>{{3, 4}, {0.45, 2.343}, {-123, 434}};
+		auto mat3x2 = mat<double, 3, 2>{{1, 2, 3}, {1234, 76.33, 9.44}, {9.123, 343.2, 331.434}};
+		start = clock();
+		for (size_t i = 0; i < 100000; i++)
+			auto prod = mat2x3 * mat3x2;
+		end = ((double)(clock() - start) / (double)CLOCKS_PER_SEC) * 1000.0;
+		std::cout << "Done 100,000 mat3x2/mat2x3 multiplications in " << end << "ms" << std::endl;
 	}
 	PRINT_MEMORY_SUMMARY
 }
