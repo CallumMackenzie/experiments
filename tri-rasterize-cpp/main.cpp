@@ -96,27 +96,30 @@ struct map2d
             inside &= edge_fn(tri_out.v[0].v, tri_out.v[2].v, p);
             return inside;
         };
-
         for (int i = 0; i < 3; ++i)
         {
             tri_out.v[i].v[0] = (int)(tri_in.v[i].v[0] * W);
             tri_out.v[i].v[1] = (int)(tri_in.v[i].v[1] * H);
         }
-
         tri::bounding_box box;
         tri_out.get_bounding_box(box);
         for (int y = box.top; y <= box.bottom; ++y)
             for (int x = box.left; x <= box.right; ++x)
             {
                 nvec<int, 2> p{x, y};
-                if (in_tri(p) && y >= 0 && x >= 0 && y < H && x < W)
+                if (y < 0)
+                    y = 0;
+                if (x < 0)
+                    x = 0;
+                if (y >= H || x >= W)
+                    break;
+                if (in_tri(p))
                 {
                     nvec<double, 2> fragCoord{(double)p[0] / (double)W,
                                               (double)p[1] / (double)H};
                     double d0 = (fragCoord - tri_in.v[0].v).len();
                     double d1 = (fragCoord - tri_in.v[1].v).len();
                     double d2 = (fragCoord - tri_in.v[2].v).len();
-
                     double coord_depth = (d0 * tri_in.v[0].depth) +
                                          (d1 * tri_in.v[1].depth) +
                                          (d2 * tri_in.v[2].depth);
@@ -133,7 +136,7 @@ struct map2d
 int main(int, char **)
 {
     std::cout << "Program begin." << std::endl;
-    map2d<100, 35> map;
+    map2d<80, 40> map;
 
     tri tri1;
     tri1.v[0].v = nvec<double, 2>{0.2, 0.2};
@@ -153,21 +156,36 @@ int main(int, char **)
     tri2.v[1].depth = 0.1;
     tri2.v[2].depth = 0.3;
 
-    auto rot = mat<double, 2, 2>::rotation_2d(0.005);
-    auto rot2 = mat<double, 2, 2>::rotation_2d(-0.004);
+    double rot_val = 0;
     auto rot_pt = nvec<double, 2>{0.5, 0.5};
+    auto scale1 = nvec<double, 2>{1, 1};
+    auto scale_add = nvec<double, 2>{0.001, 0.001};
+    bool scale_flip_flop = true;
 
     printf("\x1b[2J");
     for (;;)
     {
+        tri temp;
         printf("\x1b[H");
+        if (scale_flip_flop)
+            scale1 += scale_add;
+        else
+            scale1 -= scale_add;
+        if (scale1[0] > 2)
+            scale_flip_flop = false;
+        if (scale1[0] < 0.3)
+            scale_flip_flop = true;
+        temp = tri1;
         for (int i = 0; i < 3; ++i)
-            tri1.v[i].v = (rot * (tri1.v[i].v - rot_pt)) + rot_pt;
+            temp.v[i].v = (scale1 * (tri1.v[i].v - rot_pt)) + rot_pt;
+        map.rasterize(temp);
+        temp = tri2;
+        rot_val += 0.006;
         for (int i = 0; i < 3; ++i)
-            tri2.v[i].v = (rot2 * (tri2.v[i].v - rot_pt)) + rot_pt;
-        map.rasterize(tri1);
-        map.rasterize(tri2);
+            temp.v[i].v = (mat<double, 2, 2>::rotation_2d(rot_val) * (tri2.v[i].v - rot_pt)) + rot_pt;
+        map.rasterize(temp);
         map.print();
         map.clear();
+        // std::cout << scale_flip_flop << "  " << scale1 << std::endl;
     }
 }
