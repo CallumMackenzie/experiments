@@ -225,6 +225,14 @@ struct mesh_3d
 
         comp v[3];
         char sym = '?';
+
+        triangle(){}
+        triangle(lv3<double> p1, lv3<double> p2, lv3<double> p3)
+        {
+            v[0].p = p1;
+            v[1].p = p2;
+            v[2].p = p3;
+        }
     };
 
     std::vector<triangle> tris;
@@ -244,23 +252,15 @@ struct mesh_3d
         auto cam_view = camera.view().inverse();
         for (size_t i = 0; i < n_tris; ++i)
         {
-            bool draw = true;
             triangle_2d rast_tri;
             for (size_t j = 0; j < 3; ++j)
             {
                 lv4<double> v_pos(projection_m * (cam_view * (transform * tris[i].v[j].p.xyz1())));
-                if (v_pos.w() == 0)
-                {
-                    draw = false;
-                    break;
-                }
                 v_pos /= v_pos.w();
                 rast_tri.v[j].v = v_pos.xy() + 0.5;
                 rast_tri.v[j].depth = v_pos.z();
                 rast_tri.v[j].sym = tris[i].sym;
             }
-            if (!draw)
-                continue;
             target.rasterize(rast_tri);
         }
     }
@@ -346,7 +346,7 @@ int main(int, char **)
 
     mesh_3d mesh;
     mesh.position = {0, 0, 4};
-    if (!mesh.load_from_obj("../../cube.obj"))
+    if (!mesh.load_from_obj("../../resources/cube.obj"))
         return -1223;
     int ctr = 0;
     const int max_char = 122;
