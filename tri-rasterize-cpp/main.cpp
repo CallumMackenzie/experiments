@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <time.h>
+#include <thread>
 
 #include "math.h"
 
@@ -19,8 +21,8 @@ struct camera_3d
     double near = 0.1;
     double far = 100;
     double aspect = 1;
-    lvec3<double> rotation;
-    lvec3<double> position;
+    lvec3<double> rotation{0, 0, 0};
+    lvec3<double> position{0, 0, 0};
 
     mat<double, 4, 4> view()
     {
@@ -75,13 +77,15 @@ struct triangle_2d
 
     void get_bounding_box(bounding_box &box)
     {
+        box.left = v[0].v[0];
+        box.top = v[0].v[1];
         for (int i = 0; i < 3; i++)
         {
-            if (v[i].v[1] < box.top || i == 0)
+            if (v[i].v[1] < box.top)
                 box.top = v[i].v[1];
             if (v[i].v[1] > box.bottom)
                 box.bottom = v[i].v[1];
-            if (v[i].v[0] < box.left || i == 0)
+            if (v[i].v[0] < box.left)
                 box.left = v[i].v[0];
             if (v[i].v[0] > box.right)
                 box.right = v[i].v[0];
@@ -94,11 +98,15 @@ struct console_render_target
 {
     union
     {
-        char map[H][W];
+        char map[H][W] = {0};
         char map_arr[H * W];
     };
 
-    double depth_buff[H][W] = {0};
+    union
+    {
+        double depth_buff[H][W] = {0};
+        double depth_buff_arr[H * W];
+    };
 
     console_render_target()
     {
@@ -113,7 +121,11 @@ struct console_render_target
     void clear()
     {
         memset(map, ' ', sizeof(map));
-        memset(depth_buff, -0.001, sizeof(depth_buff));
+        memset(depth_buff, 0, sizeof(depth_buff));
+        // for (size_t i = 0; i < W * H; ++i)
+        //     map_arr[i] = ' ';
+        // for (size_t i = 0; i < W * H; ++i)
+        //     depth_buff_arr[i] = 0;
     }
 
     void print() const
@@ -121,30 +133,44 @@ struct console_render_target
         for (int i = 0; i < H; i++)
         {
             for (int j = 0; j < W; j++)
-                std::cout << map[i][j];
-            std::cout << std::endl;
+                printf("%c", map[i][j]);
+            printf("\n");
         }
+    }
+
+    static inline bool edge_fn(const nvec<int, 2> &a, const nvec<int, 2> &b, const nvec<int, 2> &c)
+    {
+        return ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]) >= 0);
+    }
+
+    std::thread rasterize_all(std::vector<triangle_2d> &all_tris)
+    {
+        return std::thread([](console_render_target *t, std::vector<triangle_2d *> tris)
+                           {
+                               size_t n_tris = tris.size();
+                               for (size_t i = 0; i < n_tris; ++i)
+                               {
+                                   t->rasterize(*tris[i]);
+                                   delete tris[i];
+                               }
+                           },
+                           this, all_tris);
     }
 
     void rasterize(triangle_2d &tri_in)
     {
         triangle_2d tri_out;
-        auto edge_fn = [](const nvec<int, 2> &a, const nvec<int, 2> &b, const nvec<int, 2> &c)
-        {
-            int val = (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]);
-            return (val >= 0);
-        };
-        auto in_tri = [&tri_out, &edge_fn](nvec<int, 2> p)
+        auto in_tri = [&tri_out](nvec<int, 2> p)
         {
             bool inside = true;
 #if WINDING == WINDING_CLOCKWISE
-            inside &= edge_fn(tri_out.v[0].v, tri_out.v[2].v, p);
-            inside &= edge_fn(tri_out.v[1].v, tri_out.v[0].v, p);
-            inside &= edge_fn(tri_out.v[2].v, tri_out.v[1].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[0].v, tri_out.v[2].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[1].v, tri_out.v[0].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[2].v, tri_out.v[1].v, p);
 #else
-            inside &= edge_fn(tri_out.v[0].v, tri_out.v[1].v, p);
-            inside &= edge_fn(tri_out.v[1].v, tri_out.v[2].v, p);
-            inside &= edge_fn(tri_out.v[2].v, tri_out.v[0].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[0].v, tri_out.v[1].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[1].v, tri_out.v[2].v, p);
+            inside &= console_render_target::edge_fn(tri_out.v[2].v, tri_out.v[0].v, p);
 #endif
             return inside;
         };
@@ -218,21 +244,19 @@ struct mesh_3d
         auto cam_view = camera.view().inverse();
         for (size_t i = 0; i < n_tris; ++i)
         {
-            triangle_2d rast_tri;
-            mesh_3d::triangle &in_tri = tris[i];
             bool draw = true;
+            triangle_2d rast_tri;
             for (size_t j = 0; j < 3; ++j)
             {
-                lv4<double> v_pos(projection_m * (cam_view * (transform * in_tri.v[j].p.xyz1())));
+                lv4<double> v_pos(projection_m * (cam_view * (transform * tris[i].v[j].p.xyz1())));
                 if (v_pos.w() == 0)
                 {
                     draw = false;
-                    continue;
+                    break;
                 }
-                v_pos /= v_pos.w();
-                rast_tri.v[j].v = v_pos.xy().to_nvec();
+                rast_tri.v[j].v = v_pos.xy() / v_pos.w();
                 rast_tri.v[j].depth = v_pos.z();
-                rast_tri.v[j].sym = in_tri.sym;
+                rast_tri.v[j].sym = tris[i].sym;
             }
             if (!draw)
                 continue;
@@ -310,19 +334,17 @@ struct mesh_3d
     }
 };
 
-#define MAP_SZ <140, 70>
+#define MAP_SZ <120, 60>
 
 int main(int, char **)
 {
-    std::cout << "Program begin." << std::endl;
     console_render_target MAP_SZ map;
     camera_3d camera;
-    camera.position = {-2, -1.5, -5};
+    camera.position = {-1, -1, 0};
 
     mesh_3d mesh;
-    mesh.position = {0, 0, 0};
-    // mesh.scale = {1.2, 1.2, 1.2};
-    if (!mesh.load_from_obj("../cube.obj"))
+    mesh.position = {0, 0, 2};
+    if (!mesh.load_from_obj("../sphere.obj"))
     {
         std::cerr << "Could not load OBJ." << std::endl;
         return 1;
@@ -339,54 +361,14 @@ int main(int, char **)
     }
 
     printf("\x1b[2J");
-    for (;;)
+    float cotr = 0;
+    for (;; cotr += 0.1)
     {
         printf("\x1b[H");
         mesh.rotation += {0.007, 0.02, 0.01};
-        // lvec3<double> forward;
-        // lvec3<double> up{0, 1, 0};
-        // lvec3<double> rotate;
-        // nvec<double, 4> clv_nv = camera.look_vector();
-        // lvec3<double> clv{clv_nv[0], clv_nv[1], clv_nv[2]};
-        // switch (to_move)
-        // {
-        // case 'w':
-        //     forward += clv;
-        //     break;
-        // case 's':
-        //     forward -= clv;
-        //     break;
-        // case 'a':
-        //     forward += clv.cross(up);
-        //     break;
-        // case 'd':
-        //     forward -= clv.cross(up);
-        //     break;
-        // case 'q':
-        //     forward += {0, 1, 0};
-        //     break;
-        // case 'e':
-        //     forward -= {0, 1, 0};
-        //     break;
-        // case 'l':
-        //     rotate += {0, 1, 0};
-        //     break;
-        // case 'j':
-        //     rotate -= {0, 1, 0};
-        //     break;
-        // case 'i':
-        //     rotate += {1, 0, 0};
-        //     break;
-        // case 'k':
-        //     rotate -= {1, 0, 0};
-        //     break;
-        // default:
-        //     break;
-        // }
-        // camera.position += forward.normalize() * amount;
-        // camera.rotation += rotate.normalize() * amount;
 
         mesh.render MAP_SZ(map, camera);
+
         map.print();
         map.clear();
     }
