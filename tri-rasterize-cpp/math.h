@@ -162,7 +162,7 @@ namespace cmm
 
 		T len() const
 		{
-			return sqrtf(dot(*this));
+			return (T)sqrtf((float)dot(*this));
 		}
 
 		nvec &normalize()
@@ -553,7 +553,7 @@ namespace cmm
 			{
 				return deg * (3.14159265 / 180.000);
 			};
-			T fovRad = 1.00 / tanf(deg_to_rad(fovDeg * 0.500));
+			T fovRad = 1.00 / tanf((float)deg_to_rad(fovDeg * 0.500));
 			T zero = (T)0;
 			mat<T, 4, 4> ret{{fovRad * aspectRatio, zero, zero, zero},
 							 {zero, fovRad, zero, zero},
@@ -609,30 +609,30 @@ namespace cmm
 		static mat<T, 4, 4> x_rotation(T x_rad)
 		{
 			auto m = mat<T, 4, 4>::identity();
-			m[1][1] = cosf(x_rad);
-			m[1][2] = sinf(x_rad);
-			m[2][1] = -sinf(x_rad);
-			m[2][2] = cosf(x_rad);
+			m[1][1] = cosf((float)x_rad);
+			m[1][2] = sinf((float)x_rad);
+			m[2][1] = -sinf((float)x_rad);
+			m[2][2] = cosf((float)x_rad);
 			return m;
 		}
 
 		static mat<T, 4, 4> y_rotation(T y_rad)
 		{
 			auto m = mat<T, 4, 4>::identity();
-			m[0][0] = cosf(y_rad);
-			m[0][2] = sinf(y_rad);
-			m[2][0] = -sinf(y_rad);
-			m[2][2] = cosf(y_rad);
+			m[0][0] = cosf((float)y_rad);
+			m[0][2] = sinf((float)y_rad);
+			m[2][0] = -sinf((float)y_rad);
+			m[2][2] = cosf((float)y_rad);
 			return m;
 		}
 
 		static mat<T, 4, 4> z_rotation(T z_rad)
 		{
 			auto m = mat<T, 4, 4>::identity();
-			m[0][0] = cosf(z_rad);
-			m[0][1] = sinf(z_rad);
-			m[1][0] = -sinf(z_rad);
-			m[1][1] = cosf(z_rad);
+			m[0][0] = cosf((float)z_rad);
+			m[0][1] = sinf((float)z_rad);
+			m[1][0] = -sinf((float)z_rad);
+			m[1][1] = cosf((float)z_rad);
 			return m;
 		}
 

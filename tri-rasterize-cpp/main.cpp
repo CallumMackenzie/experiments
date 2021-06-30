@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <time.h>
+#include <cstdlib>
 
 #include "math.h"
 
@@ -133,6 +133,25 @@ struct console_render_target
         printf("%s", map_arr);
     }
 
+    void home_cursor() const
+    {
+#ifdef _WIN32
+        std::system("cls");
+#else
+        printf("\x1b[H");
+#endif
+    }
+
+    void clear_screen() const
+    {
+
+#ifdef _WIN32
+        std::system("cls");
+#else
+        printf("\x1b[2J");
+#endif
+    }
+
     static inline bool edge_fn(const nvec<int, 2> &a, const nvec<int, 2> &b, const nvec<int, 2> &c)
     {
         return ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]) >= 0);
@@ -170,8 +189,8 @@ struct console_render_target
             box.right = W - 1;
         if (box.bottom >= H)
             box.bottom = H - 1;
-        for (int y = box.top; y <= box.bottom; ++y)
-            for (int x = box.left; x <= box.right; ++x)
+        for (int y = (int)box.top; y <= box.bottom; ++y)
+            for (int x = (int)box.left; x <= box.right; ++x)
             {
                 nvec<int, 2> p{x, y};
                 if (in_tri(p))
@@ -327,14 +346,14 @@ int main(int, char **)
 
     mesh_3d mesh;
     mesh.position = {0, 0, 4};
-    if (!mesh.load_from_obj("../cube.obj"))
+    if (!mesh.load_from_obj("../../cube.obj"))
         return -1223;
     int ctr = 0;
     const int max_char = 122;
     const int min_char = 33;
-    for (int i = 0; i < mesh.tris.size(); i++)
+    for (size_t i = 0; i < mesh.tris.size(); i++)
     {
-        char symbol = (min_char + i) - (ctr * (max_char - min_char));
+        char symbol = (min_char + (char)i) - (ctr * (max_char - min_char));
         mesh.tris[i].sym = symbol;
         if (symbol == max_char)
             ++ctr;
@@ -347,10 +366,10 @@ int main(int, char **)
     // map.clear();
     // return 0;
 
-    printf("\x1b[2J");
+    map.clear_screen();
     for (;;)
     {
-        printf("\x1b[H");
+        map.home_cursor();
         mesh.rotation += {0.007, 0.02, 0.01};
         mesh.render MAP_SZ(map, camera);
         map.print();
