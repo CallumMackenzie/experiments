@@ -5,14 +5,13 @@
 #include <fstream>
 #include <sstream>
 #include <time.h>
-#include <thread>
 
 #include "math.h"
 
 using namespace cmm;
 
-#define WINDING_CLOCKWISE 122
-#define WINDING_COUNTER_CLOCKWISE 233
+#define WINDING_CLOCKWISE 0
+#define WINDING_COUNTER_CLOCKWISE 1
 #define WINDING WINDING_COUNTER_CLOCKWISE
 
 struct camera_3d
@@ -26,10 +25,11 @@ struct camera_3d
 
     mat<double, 4, 4> view()
     {
-        lv4<double> up{0, 1, 0};
+        lv4<double> up{0, 1, 0, 1};
         lv4<double> target{0, 0, 1, 1};
         lv4<double> cam_rot(MFNS<double, 4, 4>::rotation(rotation) * target);
-        target = cam_rot + position.xyz1();
+        target = cam_rot + position.xyz_n(0);
+        target.w() = 1;
         auto ret = MFNS<double, 4, 4>::look_at(position.xyz(), target.xyz(), up.xyz());
         return ret;
     }
@@ -85,6 +85,7 @@ struct triangle_2d
                 box.top = v[i].v[1];
             if (v[i].v[1] > box.bottom)
                 box.bottom = v[i].v[1];
+
             if (v[i].v[0] < box.left)
                 box.left = v[i].v[0];
             if (v[i].v[0] > box.right)
@@ -98,8 +99,8 @@ struct console_render_target
 {
     union
     {
-        char map[H][W] = {0};
-        char map_arr[H * W];
+        char map[H][W + 1] = {0};
+        char map_arr[H * (W + 1)];
     };
 
     union
@@ -122,39 +123,19 @@ struct console_render_target
     {
         memset(map, ' ', sizeof(map));
         memset(depth_buff, 0, sizeof(depth_buff));
-        // for (size_t i = 0; i < W * H; ++i)
-        //     map_arr[i] = ' ';
-        // for (size_t i = 0; i < W * H; ++i)
-        //     depth_buff_arr[i] = 0;
+        map_arr[(H * (W + 1)) - 1] = '\0';
+        for (size_t i = 0; i < H * (W + 1); i += (W + 1))
+            map_arr[i] = '\n';
     }
 
     void print() const
     {
-        for (int i = 0; i < H; i++)
-        {
-            for (int j = 0; j < W; j++)
-                printf("%c", map[i][j]);
-            printf("\n");
-        }
+        printf("%s", map_arr);
     }
 
     static inline bool edge_fn(const nvec<int, 2> &a, const nvec<int, 2> &b, const nvec<int, 2> &c)
     {
         return ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]) >= 0);
-    }
-
-    std::thread rasterize_all(std::vector<triangle_2d> &all_tris)
-    {
-        return std::thread([](console_render_target *t, std::vector<triangle_2d *> tris)
-                           {
-                               size_t n_tris = tris.size();
-                               for (size_t i = 0; i < n_tris; ++i)
-                               {
-                                   t->rasterize(*tris[i]);
-                                   delete tris[i];
-                               }
-                           },
-                           this, all_tris);
     }
 
     void rasterize(triangle_2d &tri_in)
@@ -254,7 +235,8 @@ struct mesh_3d
                     draw = false;
                     break;
                 }
-                rast_tri.v[j].v = v_pos.xy() / v_pos.w();
+                v_pos /= v_pos.w();
+                rast_tri.v[j].v = v_pos.xy() + 0.5;
                 rast_tri.v[j].depth = v_pos.z();
                 rast_tri.v[j].sym = tris[i].sym;
             }
@@ -334,21 +316,19 @@ struct mesh_3d
     }
 };
 
-#define MAP_SZ <120, 60>
+#define MAP_SZ <256, 64>
 
 int main(int, char **)
 {
     console_render_target MAP_SZ map;
     camera_3d camera;
-    camera.position = {-1, -1, 0};
+    camera.aspect = 0.5;
+    camera.fov = 95;
 
     mesh_3d mesh;
-    mesh.position = {0, 0, 2};
-    if (!mesh.load_from_obj("../sphere.obj"))
-    {
-        std::cerr << "Could not load OBJ." << std::endl;
-        return 1;
-    }
+    mesh.position = {0, 0, 4};
+    if (!mesh.load_from_obj("../cube.obj"))
+        return -1223;
     int ctr = 0;
     const int max_char = 122;
     const int min_char = 33;
@@ -360,15 +340,19 @@ int main(int, char **)
             ++ctr;
     }
 
+    // printf("\x1b[2J");
+    // printf("\x1b[H");
+    // mesh.render MAP_SZ(map, camera);
+    // map.print();
+    // map.clear();
+    // return 0;
+
     printf("\x1b[2J");
-    float cotr = 0;
-    for (;; cotr += 0.1)
+    for (;;)
     {
         printf("\x1b[H");
         mesh.rotation += {0.007, 0.02, 0.01};
-
         mesh.render MAP_SZ(map, camera);
-
         map.print();
         map.clear();
     }
