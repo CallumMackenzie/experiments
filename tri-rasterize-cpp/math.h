@@ -312,6 +312,7 @@ namespace cmm
 		lv3<T> xyz() { return lv3<T>{x(), y(), z()}; }
 		lv3<T> zyx() { return lv3<T>{z(), y(), x()}; }
 		lv4<T> xyz1() { return lv4<T>{x(), y(), z(), (T)1}; }
+		lv4<T> xyz_n(T n) { return lv4<T>{x(), y(), z(), n}; }
 
 		nvec<T, NELEMS> to_nvec()
 		{
