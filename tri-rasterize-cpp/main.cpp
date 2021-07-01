@@ -1,18 +1,26 @@
 #include <iostream>
 #include <cstring>
 #include <vector>
-#include <string>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <vector>
+#include <time.h>
 
+#include "memory-aid.h"
 #include "math.h"
+
+COUNT_MEMORY
 
 using namespace cmm;
 
 #define WINDING_CLOCKWISE 0
 #define WINDING_COUNTER_CLOCKWISE 1
 #define WINDING WINDING_COUNTER_CLOCKWISE
+
+struct camera_3d;
+struct triangle_2d;
+struct mesh_3d;
 
 struct camera_3d
 {
@@ -94,6 +102,104 @@ struct triangle_2d
     }
 };
 
+struct mesh_3d
+{
+    struct triangle
+    {
+        struct comp
+        {
+            lvec3<double> p;
+            lvec2<double> t;
+        };
+
+        comp v[3];
+        char sym = '?';
+
+        triangle() {}
+        triangle(lv3<double> p1, lv3<double> p2, lv3<double> p3)
+        {
+            v[0].p = p1;
+            v[1].p = p2;
+            v[2].p = p3;
+        }
+    };
+
+    lv3<double> position;
+    lv3<double> rotation;
+    lv3<double> scale{1, 1, 1};
+    std::vector<triangle> tris;
+
+    bool load_from_obj(const char *file_name, size_t char_min = 33, size_t char_max = 120)
+    {
+        using namespace std;
+        ifstream f(file_name);
+        if (!f.is_open())
+            return false;
+        vector<lvec3<double>> verts;
+        vector<lvec2<double>> texs;
+        bool has_tex = false;
+        bool has_norm = false;
+        size_t char_select = 0;
+        size_t char_counter = 0;
+        while (!f.eof())
+        {
+            char line[255];
+            char junk;
+            f.getline(line, 255);
+            stringstream s;
+            s << line;
+            if (line[0] == 'v')
+            {
+                if (line[1] == 't')
+                {
+                    lvec2<double> v;
+                    s >> junk >> junk >> v[0] >> v[1];
+                    texs.push_back(v);
+                }
+                else if (line[1] == 'n')
+                    has_norm = true;
+                else
+                {
+                    lvec3<double> v;
+                    s >> junk >> v[0] >> v[1] >> v[2];
+                    verts.push_back(v);
+                    has_tex = true;
+                }
+            }
+            if (line[0] == 'f')
+            {
+                int face[3] = {0};
+                int text[3] = {0};
+                int ijunk = 0;
+                if (!has_tex && !has_norm)
+                    s >> junk >> face[0] >> face[1] >> face[2];
+                else if (!has_norm)
+                    s >> junk >>
+                        face[0] >> junk >> text[0] >>
+                        face[1] >> junk >> text[1] >>
+                        face[2] >> junk >> text[2];
+                else if (has_norm && has_tex)
+                    s >> junk >>
+                        face[0] >> junk >> text[0] >> junk >> ijunk >>
+                        face[1] >> junk >> text[1] >> junk >> ijunk >>
+                        face[2] >> junk >> text[2] >> junk >> ijunk;
+                triangle fTri;
+                for (int j = 0; j < 3; j++)
+                    fTri.v[j].p = verts[face[j] - 1];
+                if (has_tex)
+                    for (int j = 0; j < 3; j++)
+                        fTri.v[j].t = texs[text[j] - 1];
+                char symbol = (char_min + (char)++char_select) - (char_counter * (char_max - char_min));
+                fTri.sym = symbol;
+                if (symbol == char_max)
+                    ++char_counter;
+                tris.push_back(fTri);
+            }
+        }
+        return true;
+    }
+};
+
 template <int W, int H>
 struct console_render_target
 {
@@ -114,11 +220,6 @@ struct console_render_target
         clear();
     }
 
-    inline char &point_at(double x, double y)
-    {
-        return map[(int)(y * (double)H)][(int)(x * (double)W)];
-    }
-
     void clear()
     {
         memset(map, ' ', sizeof(map));
@@ -126,6 +227,28 @@ struct console_render_target
         map_arr[(H * (W + 1)) - 1] = '\0';
         for (size_t i = 0; i < H * (W + 1); i += (W + 1))
             map_arr[i] = '\n';
+    }
+
+    void render_mesh_3d(mesh_3d &mesh, camera_3d &camera)
+    {
+        auto projection_m = camera.perspective();
+        auto transform_m = MFNS<double, 4, 4>::scale(mesh.scale) *
+                           MFNS<double, 4, 4>::rotation(mesh.rotation) *
+                           MFNS<double, 4, 4>::translation(mesh.position);
+        auto cam_view_m = camera.view().inverse();
+        for (size_t i = 0; i < mesh.tris.size(); ++i)
+        {
+            triangle_2d rast_tri;
+            for (size_t j = 0; j < 3; ++j)
+            {
+                lv4<double> v_pos(projection_m * (cam_view_m * (transform_m * mesh.tris[i].v[j].p.xyz1())));
+                v_pos /= v_pos.w();
+                rast_tri.v[j].v = v_pos.xy() + 0.5;
+                rast_tri.v[j].depth = v_pos.z();
+                rast_tri.v[j].sym = mesh.tris[i].sym;
+            }
+            rasterize(rast_tri);
+        }
     }
 
     void print() const
@@ -213,166 +336,55 @@ struct console_render_target
     }
 };
 
-struct mesh_3d
+struct main_loop
 {
-    struct triangle
+    bool running = false;
+    double target_fps = 60;
+    double delta_time = 0;
+    void start()
     {
-        struct comp
+        running = true;
+        on_start();
+        clock_t last_frame = clock();
+        double check_delta = 0;
+        while (running)
         {
-            lvec3<double> p;
-            lvec2<double> t;
-        };
-
-        comp v[3];
-        char sym = '?';
-
-        triangle(){}
-        triangle(lv3<double> p1, lv3<double> p2, lv3<double> p3)
-        {
-            v[0].p = p1;
-            v[1].p = p2;
-            v[2].p = p3;
-        }
-    };
-
-    std::vector<triangle> tris;
-    lvec3<double> scale{1, 1, 1};
-    lvec3<double> position;
-    lvec3<double> rotation;
-
-    template <size_t W, size_t H>
-    void render(console_render_target<W, H> &target, camera_3d &camera)
-    {
-        size_t n_tris = tris.size();
-        auto projection_m = camera.perspective();
-        auto translation_m = MFNS<double, 4, 4>::translation(position);
-        auto rotation_m = MFNS<double, 4, 4>::rotation(rotation);
-        auto scale_m = MFNS<double, 4, 4>::scale(scale);
-        auto transform = scale_m * rotation_m * translation_m;
-        auto cam_view = camera.view().inverse();
-        for (size_t i = 0; i < n_tris; ++i)
-        {
-            triangle_2d rast_tri;
-            for (size_t j = 0; j < 3; ++j)
+            check_delta = ((double)(clock() - last_frame) / (double)CLOCKS_PER_SEC);
+            if (check_delta >= (1.0 / target_fps))
             {
-                lv4<double> v_pos(projection_m * (cam_view * (transform * tris[i].v[j].p.xyz1())));
-                v_pos /= v_pos.w();
-                rast_tri.v[j].v = v_pos.xy() + 0.5;
-                rast_tri.v[j].depth = v_pos.z();
-                rast_tri.v[j].sym = tris[i].sym;
+                last_frame = clock();
+                delta_time = check_delta;
+                on_update();
             }
-            target.rasterize(rast_tri);
         }
     }
 
-    bool load_from_obj(std::string file_name)
+    console_render_target<200, 50> render_target;
+    camera_3d camera{95, 0.1, 100, 0.5};
+    mesh_3d cube;
+
+    void on_start()
     {
-        using namespace std;
-        ifstream f(file_name);
-        if (!f.is_open())
-            return false;
-
-        vector<lvec3<double>> verts;
-        vector<lvec2<double>> texs;
-        bool has_tex = false;
-        bool has_norm = false;
-
-        while (!f.eof())
-        {
-            char line[255];
-            char junk;
-            f.getline(line, 255);
-            stringstream s;
-
-            s << line;
-            if (line[0] == 'v')
-            {
-                if (line[1] == 't')
-                {
-                    lvec2<double> v;
-                    s >> junk >> junk >> v[0] >> v[1];
-                    texs.push_back(v);
-                }
-                else if (line[1] == 'n')
-                {
-                    has_norm = true;
-                }
-                else
-                {
-                    lvec3<double> v;
-                    s >> junk >> v[0] >> v[1] >> v[2];
-                    verts.push_back(v);
-                    has_tex = true;
-                }
-            }
-            if (line[0] == 'f')
-            {
-                int face[3] = {0};
-                int text[3] = {0};
-                int ijunk = 0;
-                if (!has_tex && !has_norm)
-                    s >> junk >> face[0] >> face[1] >> face[2];
-                else if (!has_norm)
-                    s >> junk >>
-                        face[0] >> junk >> text[0] >>
-                        face[1] >> junk >> text[1] >>
-                        face[2] >> junk >> text[2];
-                else if (has_norm && has_tex)
-                    s >> junk >>
-                        face[0] >> junk >> text[0] >> junk >> ijunk >>
-                        face[1] >> junk >> text[1] >> junk >> ijunk >>
-                        face[2] >> junk >> text[2] >> junk >> ijunk;
-                triangle fTri;
-                for (int j = 0; j < 3; j++)
-                    fTri.v[j].p = verts[face[j] - 1];
-                if (has_tex)
-                    for (int j = 0; j < 3; j++)
-                        fTri.v[j].t = texs[text[j] - 1];
-                tris.push_back(fTri);
-            }
-        }
-        return true;
+        if (!cube.load_from_obj("../../resources/cube.obj"))
+            running = false;
+        cube.position = {0, 0, 4};
+        render_target.clear_screen();
+    }
+    void on_update()
+    {
+        render_target.home_cursor();
+        cube.rotation += lv3<double>{0.8, 1, 0.4} * delta_time;
+        render_target.render_mesh_3d(cube, camera);
+        render_target.print();
+        render_target.clear();
     }
 };
 
-#define MAP_SZ <256, 64>
-
 int main(int, char **)
 {
-    console_render_target MAP_SZ map;
-    camera_3d camera;
-    camera.aspect = 0.5;
-    camera.fov = 95;
-
-    mesh_3d mesh;
-    mesh.position = {0, 0, 4};
-    if (!mesh.load_from_obj("../../resources/cube.obj"))
-        return -1223;
-    int ctr = 0;
-    const int max_char = 122;
-    const int min_char = 33;
-    for (size_t i = 0; i < mesh.tris.size(); i++)
     {
-        char symbol = (min_char + (char)i) - (ctr * (max_char - min_char));
-        mesh.tris[i].sym = symbol;
-        if (symbol == max_char)
-            ++ctr;
+        main_loop().start();
     }
-
-    // printf("\x1b[2J");
-    // printf("\x1b[H");
-    // mesh.render MAP_SZ(map, camera);
-    // map.print();
-    // map.clear();
-    // return 0;
-
-    map.clear_screen();
-    for (;;)
-    {
-        map.home_cursor();
-        mesh.rotation += {0.007, 0.02, 0.01};
-        mesh.render MAP_SZ(map, camera);
-        map.print();
-        map.clear();
-    }
+    printf("\n");
+    PRINT_MEMORY_SUMMARY
 }
