@@ -196,7 +196,7 @@ struct mesh_3d
                 tris.push_back(fTri);
             }
         }
-        return true;
+        return tris.size() > 0;
     }
 };
 
@@ -339,12 +339,13 @@ struct console_render_target
 struct main_loop
 {
     bool running = false;
-    double target_fps = 60;
+    double target_fps = 30;
     double delta_time = 0;
-    void start()
+    void start(int argc, char **argv)
     {
-        running = true;
-        on_start();
+        running = on_start(argc, argv);
+        if (!running)
+            printf("Terminated\n");
         clock_t last_frame = clock();
         double check_delta = 0;
         while (running)
@@ -363,12 +364,19 @@ struct main_loop
     camera_3d camera{95, 0.1, 100, 0.5};
     mesh_3d cube;
 
-    void on_start()
+    bool on_start(int argc, char **argv)
     {
-        if (!cube.load_from_obj("../../resources/cube.obj"))
-            running = false;
+        printf("argc: %d\n", argc);
+        if (argc <= 1)
+        {
+            if (!cube.load_from_obj("../../resources/cube.obj"))
+                return false;
+        }
+        else if (!cube.load_from_obj(argv[1]))
+            return false;
         cube.position = {0, 0, 4};
         render_target.clear_screen();
+        return true;
     }
     void on_update()
     {
@@ -380,10 +388,10 @@ struct main_loop
     }
 };
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
     {
-        main_loop().start();
+        main_loop().start(argc, argv);
     }
     printf("\n");
     PRINT_MEMORY_SUMMARY
