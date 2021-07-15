@@ -475,7 +475,7 @@ namespace galg
 						{0, 0, far / (far - near), 1},
 						{0, 0, (-far * near) / (far - near), 0}};
 		}
-		static mat4 look_at(vec4 pos, vec4 target, vec4 up = vec4(0, 1, 0))
+		static mat4 look_at(const vec4 &pos, const vec4 &target, const vec4 &up)
 		{
 			auto new_forward = (target - pos).normalize();
 			auto new_up = (up - (new_forward * up.dot(new_forward))).normalize();

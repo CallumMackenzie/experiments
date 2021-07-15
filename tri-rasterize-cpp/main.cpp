@@ -31,13 +31,9 @@ struct camera_3d
     vec4 rotation{0, 0, 0};
     vec4 position{0, 0, 0};
 
-    mat4 view()
+    inline mat4 view()
     {
-        vec4 up{0, 1, 0};
-        vec4 target{0, 0, 1};
-        vec4 cam_rot(mat4::rotation(rotation) * target);
-        target = cam_rot + position;
-        return mat4::look_at(position, target, up);
+        return mat4::look_at(position, mat4::rotation(rotation) * vec4{0, 0, 1} + position, vec4{0, 1, 0});
     }
 
     inline mat4 perspective()
@@ -213,6 +209,8 @@ struct console_render_target
         double depth_buff_arr[H * W];
     };
 
+    char clear_char = ' ';
+
     console_render_target()
     {
         clear();
@@ -220,7 +218,7 @@ struct console_render_target
 
     void clear()
     {
-        memset(map, ' ', sizeof(map));
+        memset(map, clear_char, sizeof(map));
         memset(depth_buff, 0, sizeof(depth_buff));
         map_arr[(H * (W + 1)) - 1] = '\0';
         for (size_t i = 0; i < H * (W + 1); i += (W + 1))
@@ -282,7 +280,7 @@ struct console_render_target
     void rasterize(triangle_2d &tri_in)
     {
         triangle_2d tri_out;
-        auto in_tri = [&tri_out](vec2 p)
+        auto in_tri = [&tri_out](vec2 &p)
         {
             bool inside = true;
 #if WINDING == WINDING_CLOCKWISE
@@ -368,12 +366,11 @@ struct main_loop
         printf("argc: %d\n", argc);
         if (argc <= 1)
         {
-            if (!cube.load_from_obj("../../global/cube.obj"))
+            if (!cube.load_from_obj("../../global/sphere.obj"))
                 return false;
         }
         else if (!cube.load_from_obj(argv[1]))
             return false;
-        cube.position = {0, 0, 3};
         render_target.clear_screen();
         return true;
     }
@@ -381,6 +378,7 @@ struct main_loop
     {
         render_target.home_cursor();
         cube.rotation += vec4{0.8, 1, 0.4} * delta_time;
+        cube.position = vec4(0, 0, 2.5) + vec4(0, 0, sinf((float)clock() / (float)CLOCKS_PER_SEC));
         render_target.render_mesh_3d(cube, camera);
         render_target.print();
         render_target.clear();
