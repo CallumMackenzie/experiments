@@ -3,6 +3,7 @@
 
 #include <initializer_list>
 #include <string.h>
+#include <cmath>
 
 #define FORCE_INLINE inline
 
@@ -104,6 +105,34 @@
 			if (lhs[i] != rhs[i])                               \
 				return true;                                    \
 		return false;                                           \
+	}                                                           \
+	fp_num dot(const CLASS &v2) const                           \
+	{                                                           \
+		fp_num sum = 0;                                         \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			sum += (v[i] * v2[i]);                              \
+		return sum;                                             \
+	}                                                           \
+	fp_num len() const                                          \
+	{                                                           \
+		return sqrtf((float)dot(*this));                        \
+	}                                                           \
+	CLASS &normalize()                                          \
+	{                                                           \
+		fp_num l = len();                                       \
+		if (l != 0)                                             \
+			for (size_s i = 0; i < NELEMS; ++i)                 \
+				v[i] /= l;                                      \
+		return *this;                                           \
+	}                                                           \
+	CLASS normalized() const                                    \
+	{                                                           \
+		fp_num l = len();                                       \
+		CLASS ret;                                              \
+		if (l != 0)                                             \
+			for (size_s i = 0; i < NELEMS; ++i)                 \
+				ret.v[i] = v[i] / l;                            \
+		return ret;                                             \
 	}
 
 #define MAT_FP_NUM_OP(CLASS, SZ, OP)                              \
@@ -237,6 +266,14 @@ namespace galg
 			return v[index];
 		}
 
+		vec4 cross(vec4 &v2) const
+		{
+			return vec4(
+				(y() * v2.z()) - (z() * v2.y()),
+				(z() * v2.x()) - (x() * v2.z()),
+				(x() * v2.y()) - (y() * v2.x()));
+		}
+
 		ALGEBRAIC_VEC(vec4, 4)
 	};
 
@@ -271,6 +308,14 @@ namespace galg
 		FORCE_INLINE const fp_num &operator[](size_t index) const
 		{
 			return v[index];
+		}
+
+		vec3 cross(vec3 &v2) const
+		{
+			return vec3(
+				(y() * v2.z()) - (z() * v2.y()),
+				(z() * v2.x()) - (x() * v2.z()),
+				(x() * v2.y()) - (y() * v2.x()));
 		}
 
 		ALGEBRAIC_VEC(vec3, 3)
@@ -352,6 +397,73 @@ namespace galg
 		}
 
 		ALGEBRAIC_MAT_SQUARE(mat4, 4)
+		static mat4 perspective(fp_num fovDeg, fp_num aspectRatio, fp_num near, fp_num far)
+		{
+			auto deg_to_rad = [](fp_num deg)
+			{
+				return deg * (3.14159265 / 180.000);
+			};
+			fp_num fovRad = 1.00 / tanf((float)deg_to_rad(fovDeg * 0.500));
+			return mat4{{fovRad * aspectRatio, 0, 0, 0},
+						{0, fovRad, 0, 0},
+						{0, 0, far / (far - near), 1},
+						{0, 0, (-far * near) / (far - near), 0}};
+		}
+		static mat4 look_at(vec4 pos, vec4 target, vec4 up = vec4(0, 1, 0))
+		{
+			auto new_forward = (target - pos).normalize();
+			auto new_up = (up - (new_forward * up.dot(new_forward))).normalize();
+			auto new_right = new_up.cross(new_forward);
+			return mat4{
+				{new_right.x(), new_right.y(), new_right.z()},
+				{new_up.x(), new_up.y(), new_up.z()},
+				{new_forward.x(), new_forward.y(), new_forward.z()},
+				{pos.x(), pos.y(), pos.z(), 1}};
+		}
+		FORCE_INLINE static mat4 scale(fp_num x, fp_num y, fp_num z)
+		{
+			return mat4{
+				{x, 0, 0, 0},
+				{0, y, 0, 0},
+				{0, 0, z, 0},
+				{0, 0, 0, 1}};
+		}
+		FORCE_INLINE static mat4 translation(fp_num x, fp_num y, fp_num z)
+		{
+			return mat4{
+				{1, 0, 0, 0},
+				{0, 1, 0, 0},
+				{0, 0, 1, 0},
+				{x, y, z, 1}};
+		}
+		FORCE_INLINE static mat4 x_rotation(fp_num x)
+		{
+			return mat4{
+				{1, 0, 0, 0},
+				{0, cosf(x), sinf(x), 0},
+				{0, -sinf(x), cosf(x), 0},
+				{0, 0, 0, 1}};
+		}
+		FORCE_INLINE static mat4 y_rotation(fp_num y)
+		{
+			return mat4{
+				{cosf(y), 0, sinf(y), 0},
+				{0, 1, 0, 0},
+				{-sinf(y), 0, cosf(y), 0},
+				{0, 0, 0, 1}};
+		}
+		FORCE_INLINE static mat4 z_rotation(fp_num z)
+		{
+			return mat4{
+				{cosf(z), sinf(z), 0, 0},
+				{-sinf(z), cosf(z), 0, 0},
+				{0, 0, 1, 0},
+				{0, 0, 0, 1}};
+		}
+		FORCE_INLINE static mat4 rotation(fp_num x, fp_num y, fp_num z)
+		{
+			return x_rotation(x) * y_rotation(y) * z_rotation(z);
+		}
 	};
 	struct mat3
 	{
@@ -436,6 +548,18 @@ namespace galg
 		}
 
 		ALGEBRAIC_MAT_SQUARE(mat2, 2)
+
+		FORCE_INLINE static mat2 rotation(fp_num v)
+		{
+			return mat2{
+				{cosf(v), sinf(v)},
+				{-sinf(v), cosf(v)}};
+		}
+
+		FORCE_INLINE static mat2 scale(fp_num x, fp_num y)
+		{
+			return mat2{{x, 0}, {0, y}};
+		}
 	};
 }
 

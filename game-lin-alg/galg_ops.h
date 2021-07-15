@@ -13,6 +13,10 @@ namespace galg
 			ret.append(std::to_string(vec[i])).append(i == 3 ? ")" : ",");
 		return ret;
 	}
+	std::string to_string(const vec2 &vec)
+	{
+		return std::string("(").append(std::to_string(vec.x())).append(", ").append(std::to_string(vec.y())).append(")");
+	}
 	std::string to_string(bool b)
 	{
 		return std::string(b ? "true" : "false");
