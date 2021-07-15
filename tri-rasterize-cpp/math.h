@@ -367,6 +367,7 @@ namespace cmm
 	};
 
 #define MFNS mat_fns
+
 	template <typename T, size_t W, size_t H>
 	class MFNS;
 

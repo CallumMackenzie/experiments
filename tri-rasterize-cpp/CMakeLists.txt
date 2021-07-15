@@ -5,7 +5,7 @@ include(CTest)
 enable_testing()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-include_directories(../global)
+include_directories(../global ../game-lin-alg)
 
 add_executable(triangle-rasterization main.cpp)
 target_link_libraries(triangle-rasterization PRIVATE Threads::Threads)

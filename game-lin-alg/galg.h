@@ -106,33 +106,83 @@
 				return true;                                    \
 		return false;                                           \
 	}                                                           \
-	fp_num dot(const CLASS &v2) const                           \
+	CLASS &operator+=(const CLASS &rhs)                         \
 	{                                                           \
-		fp_num sum = 0;                                         \
 		for (size_s i = 0; i < NELEMS; ++i)                     \
-			sum += (v[i] * v2[i]);                              \
-		return sum;                                             \
-	}                                                           \
-	fp_num len() const                                          \
-	{                                                           \
-		return sqrtf((float)dot(*this));                        \
-	}                                                           \
-	CLASS &normalize()                                          \
-	{                                                           \
-		fp_num l = len();                                       \
-		if (l != 0)                                             \
-			for (size_s i = 0; i < NELEMS; ++i)                 \
-				v[i] /= l;                                      \
+			v[i] += rhs[i];                                     \
 		return *this;                                           \
 	}                                                           \
-	CLASS normalized() const                                    \
+	CLASS &operator-=(const CLASS &rhs)                         \
 	{                                                           \
-		fp_num l = len();                                       \
-		CLASS ret;                                              \
-		if (l != 0)                                             \
-			for (size_s i = 0; i < NELEMS; ++i)                 \
-				ret.v[i] = v[i] / l;                            \
-		return ret;                                             \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] -= rhs[i];                                     \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator/=(const CLASS &rhs)                         \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] /= rhs[i];                                     \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator*=(const CLASS &rhs)                         \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] *= rhs[i];                                     \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator+=(const fp_num &rhs)                        \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] += rhs;                                        \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator-=(const fp_num &rhs)                        \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] -= rhs;                                        \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator/=(const fp_num &rhs)                        \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] /= rhs;                                        \
+		return *this;                                           \
+	}                                                           \
+	CLASS &operator*=(const fp_num &rhs)                        \
+	{                                                           \
+		for (size_s i = 0; i < NELEMS; ++i)                     \
+			v[i] *= rhs;                                        \
+		return *this;                                           \
+	}
+
+#define VEC_STD_OPS(CLASS, NELEMS)              \
+	fp_num dot(const CLASS &v2) const           \
+	{                                           \
+		fp_num sum = 0;                         \
+		for (size_s i = 0; i < NELEMS; ++i)     \
+			sum += (v[i] * v2[i]);              \
+		return sum;                             \
+	}                                           \
+	fp_num len() const                          \
+	{                                           \
+		return sqrtf((float)dot(*this));        \
+	}                                           \
+	CLASS &normalize()                          \
+	{                                           \
+		fp_num l = len();                       \
+		if (l != 0)                             \
+			for (size_s i = 0; i < NELEMS; ++i) \
+				v[i] /= l;                      \
+		return *this;                           \
+	}                                           \
+	CLASS normalized() const                    \
+	{                                           \
+		fp_num l = len();                       \
+		CLASS ret;                              \
+		if (l != 0)                             \
+			for (size_s i = 0; i < NELEMS; ++i) \
+				ret.v[i] = v[i] / l;            \
+		return ret;                             \
 	}
 
 #define MAT_FP_NUM_OP(CLASS, SZ, OP)                              \
@@ -158,6 +208,18 @@
 				for (size_s i = 0; i < SZ; ++i)                      \
 					ret[r][c] += lhs[r][i] * rhs[i][c];              \
 		return ret;                                                  \
+	}                                                                \
+	friend bool operator==(const CLASS &lhs, const CLASS &rhs)       \
+	{                                                                \
+		for (size_s r = 0; r < SZ; ++r)                              \
+			for (size_s c = 0; c < SZ; ++c)                          \
+				if (lhs[r][c] != rhs[r][c])                          \
+					return false;                                    \
+		return true;                                                 \
+	}                                                                \
+	friend bool operator!=(const CLASS &lhs, const CLASS &rhs)       \
+	{                                                                \
+		return !(lhs == rhs);                                        \
 	}                                                                \
 	friend vec##SZ operator*(const CLASS &lhs, const vec##SZ &rhs)   \
 	{                                                                \
@@ -240,6 +302,7 @@ namespace galg
 			for (auto i : lst)
 				v[++ctr] = i;
 		}
+
 		vec4(fp_num x = 0, fp_num y = 0, fp_num z = 0, fp_num w = 1)
 		{
 			v[0] = x;
@@ -275,6 +338,7 @@ namespace galg
 		}
 
 		ALGEBRAIC_VEC(vec4, 4)
+		VEC_STD_OPS(vec4, 3)
 	};
 
 	struct vec3
@@ -319,6 +383,7 @@ namespace galg
 		}
 
 		ALGEBRAIC_VEC(vec3, 3)
+		VEC_STD_OPS(vec3, 3)
 	};
 
 	struct vec2
@@ -352,6 +417,7 @@ namespace galg
 		}
 
 		ALGEBRAIC_VEC(vec2, 2)
+		VEC_STD_OPS(vec2, 2)
 	};
 
 	struct mat4
@@ -403,7 +469,7 @@ namespace galg
 			{
 				return deg * (3.14159265 / 180.000);
 			};
-			fp_num fovRad = 1.00 / tanf((float)deg_to_rad(fovDeg * 0.500));
+			fp_num fovRad = 1.0 / (fp_num)tanf((float)deg_to_rad(fovDeg * 0.5));
 			return mat4{{fovRad * aspectRatio, 0, 0, 0},
 						{0, fovRad, 0, 0},
 						{0, 0, far / (far - near), 1},
@@ -415,9 +481,9 @@ namespace galg
 			auto new_up = (up - (new_forward * up.dot(new_forward))).normalize();
 			auto new_right = new_up.cross(new_forward);
 			return mat4{
-				{new_right.x(), new_right.y(), new_right.z()},
-				{new_up.x(), new_up.y(), new_up.z()},
-				{new_forward.x(), new_forward.y(), new_forward.z()},
+				{new_right.x(), new_right.y(), new_right.z(), 0},
+				{new_up.x(), new_up.y(), new_up.z(), 0},
+				{new_forward.x(), new_forward.y(), new_forward.z(), 0},
 				{pos.x(), pos.y(), pos.z(), 1}};
 		}
 		FORCE_INLINE static mat4 scale(fp_num x, fp_num y, fp_num z)
@@ -428,6 +494,10 @@ namespace galg
 				{0, 0, z, 0},
 				{0, 0, 0, 1}};
 		}
+		FORCE_INLINE static mat4 scale(vec4 s)
+		{
+			return scale(s.x(), s.y(), s.z());
+		}
 		FORCE_INLINE static mat4 translation(fp_num x, fp_num y, fp_num z)
 		{
 			return mat4{
@@ -435,6 +505,10 @@ namespace galg
 				{0, 1, 0, 0},
 				{0, 0, 1, 0},
 				{x, y, z, 1}};
+		}
+		FORCE_INLINE static mat4 translation(vec4 t)
+		{
+			return translation(t.x(), t.y(), t.z());
 		}
 		FORCE_INLINE static mat4 x_rotation(fp_num x)
 		{
@@ -463,6 +537,10 @@ namespace galg
 		FORCE_INLINE static mat4 rotation(fp_num x, fp_num y, fp_num z)
 		{
 			return x_rotation(x) * y_rotation(y) * z_rotation(z);
+		}
+		FORCE_INLINE static mat4 rotation(vec4 r)
+		{
+			return rotation(r.x(), r.y(), r.z());
 		}
 	};
 	struct mat3

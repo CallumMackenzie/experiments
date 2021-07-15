@@ -8,15 +8,15 @@
 #include <time.h>
 
 #include "memory-aid.h"
-#include "math.h"
+#include "galg.h"
 
 COUNT_MEMORY
 
-using namespace cmm;
+using namespace galg;
 
 #define WINDING_CLOCKWISE 0
 #define WINDING_COUNTER_CLOCKWISE 1
-#define WINDING WINDING_COUNTER_CLOCKWISE
+#define WINDING 1
 
 struct camera_3d;
 struct triangle_2d;
@@ -28,28 +28,26 @@ struct camera_3d
     double near = 0.1;
     double far = 100;
     double aspect = 1;
-    lvec3<double> rotation{0, 0, 0};
-    lvec3<double> position{0, 0, 0};
+    vec4 rotation{0, 0, 0};
+    vec4 position{0, 0, 0};
 
-    mat<double, 4, 4> view()
+    mat4 view()
     {
-        lv4<double> up{0, 1, 0, 1};
-        lv4<double> target{0, 0, 1, 1};
-        lv4<double> cam_rot(MFNS<double, 4, 4>::rotation(rotation) * target);
-        target = cam_rot + position.xyz_n(0);
-        target.w() = 1;
-        auto ret = MFNS<double, 4, 4>::look_at(position.xyz(), target.xyz(), up.xyz());
-        return ret;
+        vec4 up{0, 1, 0};
+        vec4 target{0, 0, 1};
+        vec4 cam_rot(mat4::rotation(rotation) * target);
+        target = cam_rot + position;
+        return mat4::look_at(position, target, up);
     }
 
-    mat<double, 4, 4> perspective()
+    inline mat4 perspective()
     {
-        return MFNS<double, 4, 4>::projection(fov, aspect, near, far);
+        return mat4::perspective(fov, aspect, near, far);
     }
 
-    nvec<double, 4> look_vector()
+    vec4 look_vector()
     {
-        return MFNS<double, 4, 4>::rotation(rotation) * nvec<double, 4>{0, 0, 1, 1};
+        return mat4::rotation(rotation) * vec4{0, 0, 1};
     }
 };
 
@@ -61,16 +59,16 @@ struct triangle_2d
     };
     struct vert
     {
-        nvec<double, 2> v;
+        vec2 v;
         double depth = 0;
-        lv2<double> t;
+        vec2 t;
         char sym = ' ';
     };
 
     vert v[3];
 
     triangle_2d() {}
-    triangle_2d(nvec<double, 2> v1, nvec<double, 2> v2, nvec<double, 2> v3)
+    triangle_2d(vec2 v1, vec2 v2, vec2 v3)
     {
         v[0].v = v1;
         v[1].v = v2;
@@ -108,15 +106,15 @@ struct mesh_3d
     {
         struct comp
         {
-            lvec3<double> p;
-            lvec2<double> t;
+            vec4 p;
+            vec2 t;
         };
 
         comp v[3];
         char sym = '?';
 
         triangle() {}
-        triangle(lv3<double> p1, lv3<double> p2, lv3<double> p3)
+        triangle(vec4 p1, vec4 p2, vec4 p3)
         {
             v[0].p = p1;
             v[1].p = p2;
@@ -124,9 +122,9 @@ struct mesh_3d
         }
     };
 
-    lv3<double> position;
-    lv3<double> rotation;
-    lv3<double> scale{1, 1, 1};
+    vec4 position;
+    vec4 rotation;
+    vec4 scale{1, 1, 1};
     std::vector<triangle> tris;
 
     bool load_from_obj(const char *file_name, size_t char_min = 33, size_t char_max = 120)
@@ -135,8 +133,8 @@ struct mesh_3d
         ifstream f(file_name);
         if (!f.is_open())
             return false;
-        vector<lvec3<double>> verts;
-        vector<lvec2<double>> texs;
+        vector<vec4> verts;
+        vector<vec2> texs;
         bool has_tex = false;
         bool has_norm = false;
         size_t char_select = 0;
@@ -152,7 +150,7 @@ struct mesh_3d
             {
                 if (line[1] == 't')
                 {
-                    lvec2<double> v;
+                    vec2 v;
                     s >> junk >> junk >> v[0] >> v[1];
                     texs.push_back(v);
                 }
@@ -160,7 +158,7 @@ struct mesh_3d
                     has_norm = true;
                 else
                 {
-                    lvec3<double> v;
+                    vec4 v;
                     s >> junk >> v[0] >> v[1] >> v[2];
                     verts.push_back(v);
                     has_tex = true;
@@ -232,18 +230,19 @@ struct console_render_target
     void render_mesh_3d(mesh_3d &mesh, camera_3d &camera)
     {
         auto projection_m = camera.perspective();
-        auto transform_m = MFNS<double, 4, 4>::scale(mesh.scale) *
-                           MFNS<double, 4, 4>::rotation(mesh.rotation) *
-                           MFNS<double, 4, 4>::translation(mesh.position);
+        auto transform_m = mat4::scale(mesh.scale) *
+                           mat4::rotation(mesh.rotation) *
+                           mat4::translation(mesh.position);
         auto cam_view_m = camera.view().inverse();
         for (size_t i = 0; i < mesh.tris.size(); ++i)
         {
             triangle_2d rast_tri;
             for (size_t j = 0; j < 3; ++j)
             {
-                lv4<double> v_pos(projection_m * (cam_view_m * (transform_m * mesh.tris[i].v[j].p.xyz1())));
+                vec4 v_pos(projection_m * (cam_view_m * (transform_m * mesh.tris[i].v[j].p)));
                 v_pos /= v_pos.w();
-                rast_tri.v[j].v = v_pos.xy() + 0.5;
+                rast_tri.v[j].v.x() = v_pos.x() + 0.5;
+                rast_tri.v[j].v.y() = v_pos.y() + 0.5;
                 rast_tri.v[j].depth = v_pos.z();
                 rast_tri.v[j].sym = mesh.tris[i].sym;
             }
@@ -275,15 +274,15 @@ struct console_render_target
 #endif
     }
 
-    static inline bool edge_fn(const nvec<int, 2> &a, const nvec<int, 2> &b, const nvec<int, 2> &c)
+    static inline bool edge_fn(const vec2 &a, const vec2 &b, const vec2 &c)
     {
-        return ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0]) >= 0);
+        return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()) >= 0);
     }
 
     void rasterize(triangle_2d &tri_in)
     {
         triangle_2d tri_out;
-        auto in_tri = [&tri_out](nvec<int, 2> p)
+        auto in_tri = [&tri_out](vec2 p)
         {
             bool inside = true;
 #if WINDING == WINDING_CLOCKWISE
@@ -315,11 +314,11 @@ struct console_render_target
         for (int y = (int)box.top; y <= box.bottom; ++y)
             for (int x = (int)box.left; x <= box.right; ++x)
             {
-                nvec<int, 2> p{x, y};
+                vec2 p{(fp_num)x, (fp_num)y};
                 if (in_tri(p))
                 {
-                    nvec<double, 2> fragCoord{(double)p[0] / (double)W,
-                                              (double)p[1] / (double)H};
+                    vec2 fragCoord{p.x() / (double)W,
+                                   p.y() / (double)H};
                     double d0 = (fragCoord - tri_in.v[0].v).len();
                     double d1 = (fragCoord - tri_in.v[1].v).len();
                     double d2 = (fragCoord - tri_in.v[2].v).len();
@@ -369,19 +368,19 @@ struct main_loop
         printf("argc: %d\n", argc);
         if (argc <= 1)
         {
-            if (!cube.load_from_obj("../../resources/cube.obj"))
+            if (!cube.load_from_obj("../../global/cube.obj"))
                 return false;
         }
         else if (!cube.load_from_obj(argv[1]))
             return false;
-        cube.position = {0, 0, 4};
+        cube.position = {0, 0, 3};
         render_target.clear_screen();
         return true;
     }
     void on_update()
     {
         render_target.home_cursor();
-        cube.rotation += lv3<double>{0.8, 1, 0.4} * delta_time;
+        cube.rotation += vec4{0.8, 1, 0.4} * delta_time;
         render_target.render_mesh_3d(cube, camera);
         render_target.print();
         render_target.clear();
