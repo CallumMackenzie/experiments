@@ -24,12 +24,6 @@ int main(int, char **)
             {5, 6, 7, 8},
             {9, 10, 11, 12},
             {13, 14, 15, 16}};
-        std::cout << galg::to_string(v4, fmt) << "\n\n"
-                  << galg::to_string(v3, fmt) << "\n\n"
-                  << galg::to_string(v2, fmt) << "\n\n"
-                  << galg::to_string(m2, fmt) << "\n\n"
-                  << galg::to_string(m3, fmt) << "\n\n"
-                  << galg::to_string(m4, fmt) << "\n\n";
     }
     PRINT_MEMORY_SUMMARY
 }

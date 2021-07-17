@@ -312,7 +312,7 @@ struct console_render_target
         for (int y = (int)box.top; y <= box.bottom; ++y)
             for (int x = (int)box.left; x <= box.right; ++x)
             {
-                vec2 p{(fp_num)x, (fp_num)y};
+                vec2 p((fp_num)x, (fp_num)y);
                 if (in_tri(p))
                 {
                     vec2 fragCoord{p.x() / (double)W,
@@ -338,6 +338,7 @@ struct main_loop
     bool running = false;
     double target_fps = 30;
     double delta_time = 0;
+    double target_delta = 1.0 / target_fps;
     void start(int argc, char **argv)
     {
         running = on_start(argc, argv);
@@ -345,16 +346,21 @@ struct main_loop
             printf("Terminated\n");
         clock_t last_frame = clock();
         double check_delta = 0;
+        recheck_fps();
         while (running)
         {
             check_delta = ((double)(clock() - last_frame) / (double)CLOCKS_PER_SEC);
-            if (check_delta >= (1.0 / target_fps))
+            if (check_delta >= target_delta)
             {
                 last_frame = clock();
                 delta_time = check_delta;
                 on_update();
             }
         }
+    }
+    void recheck_fps()
+    {
+        target_delta = 1.0 / target_fps;
     }
 
     console_render_target<200, 50> render_target;
@@ -363,10 +369,9 @@ struct main_loop
 
     bool on_start(int argc, char **argv)
     {
-        printf("argc: %d\n", argc);
         if (argc <= 1)
         {
-            if (!cube.load_from_obj("../../global/sphere.obj"))
+            if (!cube.load_from_obj("../../global/cube.obj"))
                 return false;
         }
         else if (!cube.load_from_obj(argv[1]))
@@ -377,11 +382,12 @@ struct main_loop
     void on_update()
     {
         render_target.home_cursor();
-        cube.rotation += vec4{0.8, 1, 0.4} * delta_time;
+        cube.rotation += vec4(0.8, 1, 0.4) * delta_time;
         cube.position = vec4(0, 0, 2.5) + vec4(0, 0, sinf((float)clock() / (float)CLOCKS_PER_SEC));
         render_target.render_mesh_3d(cube, camera);
         render_target.print();
         render_target.clear();
+        printf("\nFPS:%f", 1.0 / delta_time);
     }
 };
 

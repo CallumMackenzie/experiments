@@ -70,7 +70,7 @@ namespace galg
 			ret.append(ech.open);
 			for (size_s j = 0; j < nelems; ++j)
 			{
-				ret.append(std::to_string(m.m[i][j]));
+				ret.append(std::to_string(m[i][j]));
 				if (j == nelems - 1)
 				{
 					if (i == nelems - 1)
