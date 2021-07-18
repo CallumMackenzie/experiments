@@ -298,6 +298,7 @@ namespace galg
 
 		vec4(std::initializer_list<fp_num> lst)
 		{
+			v[3] = 1;
 			short ctr = -1;
 			for (auto i : lst)
 				v[++ctr] = i;

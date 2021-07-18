@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     Library
+ * Method:    getX
+ * Signature: ()F
+ */
+JNIEXPORT jfloat JNICALL Java_Library_getX
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     Library
  * Method:    first_fib_cpp
  * Signature: (I)[J
  */

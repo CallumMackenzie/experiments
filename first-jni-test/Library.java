@@ -1,8 +1,12 @@
 
+// javac -h . Library.java
 public class Library {
 	static {
 		System.loadLibrary("library");
 	}
+
+	private float x = 0;
+	public native float getX();
 
 	public native long[] first_fib_cpp(int nums);
 
