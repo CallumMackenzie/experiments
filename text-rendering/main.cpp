@@ -1,5 +1,5 @@
 #include <iostream>
-#include "opengl.h"
+#include "text_renderer.h"
 #include "memory-aid.h"
 
 COUNT_MEMORY
@@ -7,16 +7,14 @@ COUNT_MEMORY
 int main(int, char **)
 {
     {
-        gl_window window;
-        window.init();
-        window.set_clear_colour(0xfa01eb);
-        while (!window.should_close())
+        text_renderer renderer;
+        if (!renderer.init("Text Renderer", 100, 50))
+            return -2;
+        while (!renderer.window.should_close())
         {
-            window.poll_events();
-            window.clear();
-            window.swap_buffers();
+            renderer.window.poll_events();
+            renderer.render_text();
         }
     }
-
     PRINT_MEMORY_SUMMARY
 }

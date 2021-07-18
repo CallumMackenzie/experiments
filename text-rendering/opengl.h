@@ -1,5 +1,5 @@
 #ifndef OPENGL_H_CUSTOM
-#define OPENGL_H_CUSTOM
+#define OPENGL_H_CUSTOM 1
 
 #include "khrplatform.h"
 #include "glad.h"
@@ -13,9 +13,9 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 struct gl_window
 {
-	enum class init_result
+	enum init_result
 	{
-		success,
+		init_success,
 		null_window_ptr,
 		no_gl_funcs_found
 	};
@@ -35,7 +35,6 @@ struct gl_window
 
 	void set_clear_colour(long colour)
 	{
-		glClearDepth(1.0f);
 		int r = (colour & 0xFF0000) >> 16;
 		int g = (colour & 0x00FF00) >> 8;
 		int b = (colour & 0x0000FF);
@@ -44,7 +43,7 @@ struct gl_window
 
 	void clear()
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	void swap_buffers()
@@ -55,6 +54,11 @@ struct gl_window
 	void poll_events()
 	{
 		glfwPollEvents();
+	}
+
+	void set_position(int screen_x, int screen_y)
+	{
+		glfwSetWindowPos(window, screen_x, screen_y);
 	}
 
 	init_result init(const char *title = "", unsigned int s_width = 720, unsigned int s_height = 480)
@@ -68,14 +72,14 @@ struct gl_window
 		if (!window)
 		{
 			glfwTerminate();
-			return init_result::null_window_ptr;
+			return null_window_ptr;
 		}
 		glfwMakeContextCurrent(window);
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-			return init_result::no_gl_funcs_found;
+			return no_gl_funcs_found;
 		glViewport(0, 0, (int)s_width, (int)s_height);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		return init_result::success;
+		return init_success;
 	}
 };
 
