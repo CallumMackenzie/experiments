@@ -1,35 +1,22 @@
 #include <iostream>
 #include "opengl.h"
+#include "memory-aid.h"
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+COUNT_MEMORY
 
 int main(int, char **)
 {
-    GLFWwindow *window = nullptr;
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
-
-    window = glfwCreateWindow(720, 480, "OpenGL Window", NULL, NULL);
-
-    if (!window)
     {
-        glfwTerminate();
-        return -1;
+        gl_window window;
+        window.init();
+        window.set_clear_colour(0xfa01eb);
+        while (!window.should_close())
+        {
+            window.poll_events();
+            window.clear();
+            window.swap_buffers();
+        }
     }
-    glfwMakeContextCurrent(window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        return -2;
-    glViewport(0, 0, 720, 480);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-    }
+
+    PRINT_MEMORY_SUMMARY
 }
