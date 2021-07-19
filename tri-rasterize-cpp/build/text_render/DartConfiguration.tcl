@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: D:/Coding/Other/experiments/tri-rasterize-cpp
-BuildDirectory: D:/Coding/Other/experiments/tri-rasterize-cpp/build
+SourceDirectory: D:/Coding/Other/experiments/text-rendering
+BuildDirectory: D:/Coding/Other/experiments/tri-rasterize-cpp/build/text_render
 
 # Where to place the cost data store
 CostDataFile: 
@@ -26,7 +26,7 @@ SubmitURL: http://
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "D:/Coding/Other/experiments/tri-rasterize-cpp"
+ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "D:/Coding/Other/experiments/text-rendering"
 MakeCommand: "C:\Program Files\CMake\bin\cmake.exe" --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
@@ -62,7 +62,7 @@ UpdateOptions:
 UpdateType: 
 
 # Compiler info
-Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/cl.exe
+Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx86/x86/cl.exe
 CompilerVersion: 19.28.29337.0
 
 # Dynamic analysis (MemCheck)

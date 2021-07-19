@@ -48,6 +48,11 @@
 		"ctime": "cpp",
 		"ratio": "cpp",
 		"thread": "cpp",
-		"future": "cpp"
+		"future": "cpp",
+		"ios": "cpp",
+		"list": "cpp",
+		"xhash": "cpp",
+		"xiosbase": "cpp",
+		"xstring": "cpp"
 	}
 }

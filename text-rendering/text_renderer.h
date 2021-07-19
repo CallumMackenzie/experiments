@@ -50,6 +50,7 @@ struct text_renderer
 	vec2 margin{30, 30};
 	vec2 pixel_size;
 	vec2 cursor;
+	fp_num font_size = 0.2;
 
 	text_renderer(size_t char_width, size_t char_height) : char_size((fp_num)char_width, (fp_num)char_height)
 	{
@@ -203,7 +204,7 @@ struct text_renderer
 					continue;
 				const char txt[2]{screen[y][x].ch, '\0'};
 				vec2 new_pos = (vec2((fp_num)x, (fp_num)y) * (px_size / char_size));
-				render_text(txt, new_pos.x() + margin.x(), (px_size.y() - new_pos.y()) + margin.y(), 0.2, screen[y][x].col);
+				render_text(txt, new_pos.x() + margin.x(), (px_size.y() - new_pos.y()) + margin.y(), font_size, screen[y][x].col);
 			}
 	}
 
