@@ -1,3 +1,8 @@
+
+#define RENDER_TERM 1
+#define RENDER_WIN 2
+#define RENDER RENDER_WIN
+
 #include <iostream>
 #include <cstring>
 #include <vector>
@@ -9,6 +14,18 @@
 
 #include "memory-aid.h"
 #include "galg.h"
+
+#if RENDER == RENDER_WIN
+#include "text_renderer.h"
+#endif
+
+#define STR(X) #X
+
+#ifdef _WIN32
+#define R_PATH(X) STR(../ ##X)
+#elif
+#define R_PATH(X) STR(X)
+#endif
 
 COUNT_MEMORY
 
@@ -31,10 +48,10 @@ struct mesh_3d;
 
 struct camera_3d
 {
-    double fov = 80;
-    double near = 0.1;
-    double far = 100;
-    double aspect = 1;
+    fp_num fov = 80;
+    fp_num near = 0.1;
+    fp_num far = 100;
+    fp_num aspect = 1;
     vec4 rotation{0, 0, 0};
     vec4 position{0, 0, 0};
 
@@ -58,12 +75,12 @@ struct triangle_2d
 {
     struct bounding_box
     {
-        double top, left, right, bottom = 0;
+        fp_num top, left, right, bottom = 0;
     };
     struct vert
     {
         vec2 v;
-        double depth = 0;
+        fp_num depth = 0;
         vec2 t;
         char sym = ' ';
     };
@@ -221,37 +238,45 @@ struct mesh_3d
     }
 };
 
-template <int W, int H>
+template <int WIDTH_, int HEIGHT_>
 struct console_render_target
 {
     union
     {
-        char map[H][W + 1] = {0};
-        char map_arr[H * (W + 1)];
+        char map[HEIGHT_][WIDTH_ + 1] = {0};
+        char map_arr[HEIGHT_ * (WIDTH_ + 1)];
     };
 
     union
     {
-        double depth_buff[H][W] = {0};
-        double depth_buff_arr[H * W];
+        fp_num depth_buff[HEIGHT_][WIDTH_] = {0};
+        fp_num depth_buff_arr[HEIGHT_ * WIDTH_];
     };
 
-    double depth_buff_clear = 0;
+    fp_num depth_buff_clear = 0;
     char clear_char = ' ';
+
+#if RENDER == RENDER_WIN
+    text_renderer renderer = text_renderer(WIDTH_ + 2, HEIGHT_ + 2);
+#endif
 
     console_render_target()
     {
         clear();
+#if RENDER == RENDER_WIN
+        if (!renderer.init("Console 3D - Callum Mackenzie", R_PATH(../../global/fonts/JetBrainsMono.ttf)))
+            exit(-1);
+#endif
     }
 
     void clear()
     {
         memset(map, clear_char, sizeof(map));
-        for (size_t i = 0; i < W * H; ++i)
+        for (size_t i = 0; i < WIDTH_ * HEIGHT_; ++i)
             depth_buff_arr[i] = depth_buff_clear;
         // memset(depth_buff, depth_buff_clear, sizeof(depth_buff));
-        map_arr[(H * (W + 1)) - 1] = '\0';
-        for (size_t i = 0; i < H * (W + 1); i += (W + 1))
+        map_arr[(HEIGHT_ * (WIDTH_ + 1)) - 1] = '\0';
+        for (size_t i = 0; i < HEIGHT_ * (WIDTH_ + 1); i += (WIDTH_ + 1))
             map_arr[i] = '\n';
     }
 
@@ -305,17 +330,17 @@ struct console_render_target
                 return inside;
             };
             for (size_s i = 0; i < 3; ++i)
-                rast_tri.v[i].v *= vec2(W, H);
+                rast_tri.v[i].v *= vec2(WIDTH_, HEIGHT_);
             triangle_2d::bounding_box box;
             rast_tri.get_bounding_box(box);
             if (box.top < 0)
                 box.top = 0;
             if (box.left < 0)
                 box.left = 0;
-            if (box.right >= W)
-                box.right = W - 1;
-            if (box.bottom >= H)
-                box.bottom = H - 1;
+            if (box.right >= WIDTH_)
+                box.right = WIDTH_ - 1;
+            if (box.bottom >= HEIGHT_)
+                box.bottom = HEIGHT_ - 1;
             for (size_t y = (size_t)box.top; y <= box.bottom; ++y)
                 for (size_t x = (size_t)box.left; x <= box.right; ++x)
                 {
@@ -341,27 +366,38 @@ struct console_render_target
             render_tri_3d(mesh.tris[i]);
     }
 
-    void print() const
+    void print()
     {
+#if RENDER == RENDER_WIN
+        renderer.print(map_arr);
+#elif RENDER == RENDER_TERM
         printf("%s", map_arr);
-    }
-
-    void home_cursor() const
-    {
-#ifdef _WIN32
-        std::system("cls");
-#else
-        printf("\x1b[H");
 #endif
     }
 
-    void clear_screen() const
+    void home_cursor()
     {
+#if RENDER == RENDER_TERM
+#ifdef _WIDTH_IN32
+        std::system("cls");
+#else
+        printf("\x1b[HEIGHT_");
+#endif
+#elif RENDER == RENDER_WIN
+        renderer.home_cursor();
+#endif
+    }
 
-#ifdef _WIN32
+    void clear_screen()
+    {
+#if RENDER == RENDER_TERM
+#ifdef _WIDTH_IN32
         std::system("cls");
 #else
         printf("\x1b[2J");
+#endif
+#elif RENDER == RENDER_WIN
+        renderer.clear();
 #endif
     }
 
@@ -374,26 +410,36 @@ struct console_render_target
 struct main_loop
 {
     bool running = false;
-    double target_fps = 30;
-    double delta_time = 0;
-    double target_delta = 1.0 / target_fps;
+    fp_num target_fps = 30;
+    fp_num delta_time = 0;
+    fp_num target_delta = 1.0 / target_fps;
     void start(int argc, char **argv)
     {
         running = on_start(argc, argv);
         if (!running)
             printf("Terminated\n");
         clock_t last_frame = clock();
-        double check_delta = 0;
+        fp_num check_delta = 0;
         recheck_fps();
         while (running)
         {
-            check_delta = ((double)(clock() - last_frame) / (double)CLOCKS_PER_SEC);
+            check_delta = ((fp_num)(clock() - last_frame) / (fp_num)CLOCKS_PER_SEC);
             if (check_delta >= target_delta)
             {
                 last_frame = clock();
                 delta_time = check_delta;
                 on_update();
+#if RENDER == RENDER_WIN
+                render_target.renderer.window.clear();
+                render_target.renderer.render_screen();
+                render_target.renderer.window.swap_buffers();
+                if (render_target.renderer.window.should_close())
+                    running = false;
+#endif
             }
+#if RENDER == RENDER_WIN
+            render_target.renderer.window.poll_events();
+#endif
         }
     }
     void recheck_fps()
@@ -407,9 +453,13 @@ struct main_loop
 
     bool on_start(int argc, char **argv)
     {
+#if RENDER == RENDER_WIN
+        render_target.renderer.font_size = 0.2;
+        render_target.renderer.margin = vec2(1, 1);
+#endif
         if (argc <= 1)
         {
-            if (!cube.load_from_obj("../../global/cube.obj"))
+            if (!cube.load_from_obj(R_PATH(../../global/cube.obj)))
                 return false;
         }
         else if (!cube.load_from_obj(argv[1]))
@@ -435,5 +485,5 @@ int main(int argc, char **argv)
         main_loop().start(argc, argv);
     }
     printf("\n");
-    PRINT_MEMORY_SUMMARY
+    PRINT_MEMORY_SUMMARY;
 }
