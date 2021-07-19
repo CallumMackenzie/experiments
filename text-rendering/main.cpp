@@ -8,14 +8,16 @@ int main(int, char **)
 {
     {
         text_renderer renderer(60, 30);
-        if (!renderer.init("Text Renderer", "../VeraMono.ttf"))
+        if (!renderer.init("Text Renderer", "../../VeraMono.ttf"))
             return -1;
-
+        char tmp = 39;
+        for (size_t i = 0; i < 60; ++i)
+            for (size_t j = 0; j < 30; ++j)
+                renderer.set_char(i, j, ++tmp >= 127 ? (tmp = 39) : tmp);
         while (!renderer.window.should_close())
         {
             renderer.window.poll_events();
             renderer.window.clear();
-            // renderer.render_text("Hello!\0", 25, 25, 1, vec3(0.5, 0.5, 1));
             renderer.render_screen();
             renderer.window.swap_buffers();
         }

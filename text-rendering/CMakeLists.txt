@@ -8,10 +8,15 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+if (WIN32)
+	set(FREETYPE_INCLUDE_DIRS ../global/freetype/include)
+	set(FREETYPE_LIBRARY freetype)
+endif()
+
 add_subdirectory(../global/glfw glfw)
 find_package(Freetype REQUIRED)
 
-link_directories(../global/glfw)
+link_directories(../global/glfw ../global/freetype)
 include_directories(
 	../global 
 	../global/glfw 

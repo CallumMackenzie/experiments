@@ -7,6 +7,10 @@
 #include "glfw3native.h"
 #include <iostream>
 
+#ifdef _WIN32
+typedef unsigned int uint;
+#endif
+
 void gl_print_errors()
 {
 	GLenum err;

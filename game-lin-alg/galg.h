@@ -489,7 +489,7 @@ namespace galg
 			{
 				return deg * (3.14159265 / 180.000);
 			};
-			fp_num fovRad = 1.0 / (fp_num)tanf((float)deg_to_rad(fovDeg * 0.5));
+			fp_num fovRad = (fp_num)1.0 / (fp_num)tanf((float)deg_to_rad(fovDeg * (fp_num)0.5));
 			return mat4{{fovRad * aspectRatio, 0, 0, 0},
 						{0, fovRad, 0, 0},
 						{0, 0, far / (far - near), 1},

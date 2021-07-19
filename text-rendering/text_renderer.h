@@ -12,19 +12,14 @@ const char *GLYPH_VERT_SHADER =
 const char *GLYPH_FRAG_SHADER =
 	"#version 330 core\nin vec2 uv;layout (location = 0) out vec4 colour;uniform sampler2D ch;uniform vec3 text_colour;void main(){vec4 sm = vec4(1.0,1.0,1.0,texture(ch, uv).r);colour = vec4(text_colour,1.0) * sm;}";
 
+
 using namespace galg;
 struct text_renderer
 {
 	struct char_info
 	{
-		inline static char ctr = 32;
 		char ch = ' ';
-		vec3 col {0.4, 0.25, 0.13};
-		char_info(){
-			if (ctr >= 127)
-				ctr = 32;
-			ch = ++ctr;
-		}
+		vec3 col{0.4, 0.25, 0.13};
 	};
 	struct char_set
 	{
@@ -56,7 +51,7 @@ struct text_renderer
 	vec2 margin{30, 30};
 	vec2 pixel_size;
 
-	text_renderer(size_t char_width, size_t char_height) : char_size(char_width, char_height)
+	text_renderer(size_t char_width, size_t char_height) : char_size((fp_num)char_width, (fp_num)char_height)
 	{
 		screen = new char_info *[(size_t)char_size.y()];
 		for (size_t i = 0; i < char_size.y(); ++i)
