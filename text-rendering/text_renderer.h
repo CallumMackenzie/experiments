@@ -1,5 +1,5 @@
 #ifndef TEXT_RENDERER_H_
-#define TEXT_RENDERER_H_ c1
+#define TEXT_RENDERER_H_ 1
 #include "opengl.h"
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -11,7 +11,6 @@ const char *GLYPH_VERT_SHADER =
 	"#version 330 core\nlayout (location = 0) in vec4 vert;out vec2 uv;uniform mat4 projection;void main(){gl_Position = projection * vec4(vert.x, vert.y, 0.0, 1.0);uv = vert.zw;}";
 const char *GLYPH_FRAG_SHADER =
 	"#version 330 core\nin vec2 uv;layout (location = 0) out vec4 colour;uniform sampler2D ch;uniform vec3 text_colour;void main(){vec4 sm = vec4(1.0,1.0,1.0,texture(ch, uv).r);colour = vec4(text_colour,1.0) * sm;}";
-
 
 using namespace galg;
 struct text_renderer
@@ -50,6 +49,7 @@ struct text_renderer
 	const vec2 char_size;
 	vec2 margin{30, 30};
 	vec2 pixel_size;
+	vec2 cursor;
 
 	text_renderer(size_t char_width, size_t char_height) : char_size((fp_num)char_width, (fp_num)char_height)
 	{
@@ -193,16 +193,55 @@ struct text_renderer
 
 	void render_screen()
 	{
-		pixel_size.x() = window.get_width();
-		pixel_size.y() = window.get_height();
+		pixel_size.x() = (fp_num)window.get_width();
+		pixel_size.y() = (fp_num)window.get_height();
 		vec2 px_size = pixel_size - (margin * 2);
 		for (size_t y = 0; y < char_size.y(); ++y)
 			for (size_t x = 0; x < char_size.x(); ++x)
 			{
+				if (screen[y][x].ch == ' ')
+					continue;
 				const char txt[2]{screen[y][x].ch, '\0'};
-				vec2 new_pos = (vec2(x, y) * (px_size / char_size));
-				render_text(txt, new_pos.x() + margin.x(), (px_size.y() - new_pos.y()) + margin.y(), 0.3, screen[y][x].col);
+				vec2 new_pos = (vec2((fp_num)x, (fp_num)y) * (px_size / char_size));
+				render_text(txt, new_pos.x() + margin.x(), (px_size.y() - new_pos.y()) + margin.y(), 0.2, screen[y][x].col);
 			}
+	}
+
+	void print(const char *text)
+	{
+		size_t ctr = 0;
+		char select = text[0];
+		while (select != '\0')
+		{
+			if (cursor.x() >= char_size.x())
+				return;
+			if (select == '\n')
+			{
+				cursor.x() = 0;
+				if (++cursor.y() >= char_size.y())
+					return;
+			}
+			else
+			{
+				screen[(size_t)cursor.y()][(size_t)cursor.x()].ch = select;
+				++cursor.x();
+			}
+
+			select = text[++ctr];
+		}
+	}
+
+	void clear(char clear = ' ')
+	{
+		for (size_t i = 0; i < char_size.x(); ++i)
+			for (size_t j = 0; j < char_size.y(); ++j)
+				screen[j][i].ch = clear;
+		home_cursor();
+	}
+
+	void home_cursor()
+	{
+		cursor = vec2{0, 0};
 	}
 };
 
