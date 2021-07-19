@@ -7,11 +7,6 @@
 #include "glfw3native.h"
 #include <iostream>
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
 void gl_print_errors()
 {
 	GLenum err;
@@ -69,7 +64,8 @@ struct gl_window
 		glfwSetWindowPos(window, screen_x, screen_y);
 	}
 
-	init_result init(const char *title = "", unsigned int s_width = 720, unsigned int s_height = 480)
+	init_result init(const char *title = "", unsigned int s_width = 720, unsigned int s_height = 480,
+					 GLFWframebuffersizefun on_win_resize = framebuffer_size_callback)
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -86,8 +82,27 @@ struct gl_window
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 			return no_gl_funcs_found;
 		glViewport(0, 0, (int)s_width, (int)s_height);
-		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+		glfwSetFramebufferSizeCallback(window, on_win_resize);
 		return init_success;
+	}
+
+	uint get_width()
+	{
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		return width;
+	}
+
+	uint get_height()
+	{
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		return height;
+	}
+
+	static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+	{
+		glViewport(0, 0, width, height);
 	}
 };
 
