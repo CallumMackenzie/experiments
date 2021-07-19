@@ -13,24 +13,11 @@
 #include <time.h>
 
 #include "memory-aid.h"
+#include "rel-paths.h"
 #include "galg.h"
 
 #if RENDER == RENDER_WIN
 #include "text_renderer.h"
-#endif
-
-#define STR(X) #X
-
-#ifdef _WIN32
-std::string R_PATH(const char *str)
-{
-    return std::string("../").append(std::string(str));
-}
-#elif
-std::string R_PATH(const char *str)
-{
-    return std::string(str);
-}
 #endif
 
 COUNT_MEMORY
