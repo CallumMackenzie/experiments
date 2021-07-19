@@ -22,9 +22,15 @@
 #define STR(X) #X
 
 #ifdef _WIN32
-#define R_PATH(X) STR(../ ##X)
+std::string R_PATH(const char *str)
+{
+    return std::string("../").append(std::string(str));
+}
 #elif
-#define R_PATH(X) STR(X)
+std::string R_PATH(const char *str)
+{
+    return std::string(str);
+}
 #endif
 
 COUNT_MEMORY
@@ -52,22 +58,22 @@ struct camera_3d
     fp_num near = 0.1;
     fp_num far = 100;
     fp_num aspect = 1;
-    vec4 rotation{0, 0, 0};
-    vec4 position{0, 0, 0};
+    vec4fp rotation{0, 0, 0};
+    vec4fp position{0, 0, 0};
 
-    inline mat4 view()
+    inline mat4fp view()
     {
-        return mat4::look_at(position, mat4::rotation(rotation) * vec4{0, 0, 1} + position, vec4{0, 1, 0});
+        return mat4fp::look_at(position, mat4fp::rotation(rotation) * vec4fp{0, 0, 1} + position, vec4fp{0, 1, 0});
     }
 
-    inline mat4 perspective()
+    inline mat4fp perspective()
     {
-        return mat4::perspective(fov, aspect, near, far);
+        return mat4fp::perspective(fov, aspect, near, far);
     }
 
-    vec4 look_vector()
+    vec4fp look_vector()
     {
-        return mat4::rotation(rotation) * vec4{0, 0, 1};
+        return mat4fp::rotation(rotation) * vec4fp{0, 0, 1};
     }
 };
 
@@ -79,9 +85,9 @@ struct triangle_2d
     };
     struct vert
     {
-        vec2 v;
+        vec2fp v;
         fp_num depth = 0;
-        vec2 t;
+        vec2fp t;
         char sym = ' ';
     };
 
@@ -90,7 +96,7 @@ struct triangle_2d
     bool facing_view = false;
 
     triangle_2d() {}
-    triangle_2d(vec2 v1, vec2 v2, vec2 v3)
+    triangle_2d(vec2fp v1, vec2fp v2, vec2fp v3)
     {
         v[0].v = v1;
         v[1].v = v2;
@@ -136,16 +142,16 @@ struct mesh_3d
     {
         struct comp
         {
-            vec4 p;
-            vec2 t;
-            vec4 n;
+            vec4fp p;
+            vec2fp t;
+            vec4fp n;
         };
 
         comp v[3];
         char sym = '?';
 
         triangle() {}
-        triangle(vec4 p1, vec4 p2, vec4 p3)
+        triangle(vec4fp p1, vec4fp p2, vec4fp p3)
         {
             v[0].p = p1;
             v[1].p = p2;
@@ -153,9 +159,9 @@ struct mesh_3d
         }
     };
 
-    vec4 position;
-    vec4 rotation;
-    vec4 scale{1, 1, 1};
+    vec4fp position;
+    vec4fp rotation;
+    vec4fp scale{1, 1, 1};
     std::vector<triangle> tris;
 
     bool load_from_obj(const char *file_name, size_t char_min = 33, size_t char_max = 120)
@@ -164,9 +170,9 @@ struct mesh_3d
         ifstream f(file_name);
         if (!f.is_open())
             return false;
-        vector<vec4> verts;
-        vector<vec2> texs;
-        vector<vec4> norms;
+        vector<vec4fp> verts;
+        vector<vec2fp> texs;
+        vector<vec4fp> norms;
         bool has_tex = false;
         bool has_norm = false;
         size_t char_select = 0;
@@ -182,20 +188,20 @@ struct mesh_3d
             {
                 if (line[1] == 't')
                 {
-                    vec2 v;
+                    vec2fp v;
                     s >> junk >> junk >> v.x() >> v.y();
                     texs.push_back(v);
                 }
                 else if (line[1] == 'n')
                 {
-                    vec4 v;
+                    vec4fp v;
                     s >> junk >> junk >> v.x() >> v.y() >> v.z();
                     norms.push_back(v);
                     has_norm = true;
                 }
                 else
                 {
-                    vec4 v;
+                    vec4fp v;
                     s >> junk >> v.x() >> v.y() >> v.z();
                     verts.push_back(v);
                     has_tex = true;
@@ -264,7 +270,7 @@ struct console_render_target
     {
         clear();
 #if RENDER == RENDER_WIN
-        if (!renderer.init("Console 3D - Callum Mackenzie", R_PATH(../../global/fonts/JetBrainsMono.ttf)))
+        if (!renderer.init("Console 3D - Callum Mackenzie", R_PATH("../../global/fonts/JetBrainsMono.ttf").c_str()))
             exit(-1);
 #endif
     }
@@ -283,10 +289,10 @@ struct console_render_target
     void render_mesh_3d(mesh_3d &mesh, camera_3d &camera)
     {
         auto projection_m = camera.perspective();
-        auto rotation_m = mat4::rotation(mesh.rotation);
-        auto transform_m = mat4::scale(mesh.scale) *
+        auto rotation_m = mat4fp::rotation(mesh.rotation);
+        auto transform_m = mat4fp::scale(mesh.scale) *
                            rotation_m *
-                           mat4::translation(mesh.position);
+                           mat4fp::translation(mesh.position);
         auto clv = camera.look_vector();
         auto cam_view_m = camera.view().inverse();
         auto render_tri_3d = [&clv, &cam_view_m, &projection_m, &rotation_m, &transform_m, this](mesh_3d::triangle &tri)
@@ -305,14 +311,14 @@ struct console_render_target
 #endif
 #endif
                 rast_tri.facing_view = normal_view_dot < 0;
-                vec4 v_pos(projection_m * (cam_view_m * (transform_m * tri.v[j].p)));
+                vec4fp v_pos(projection_m * (cam_view_m * (transform_m * tri.v[j].p)));
                 rast_tri.v[j].v.x() = v_pos.x() / v_pos.w() + 0.5;
                 rast_tri.v[j].v.y() = v_pos.y() / v_pos.w() + 0.5;
                 rast_tri.v[j].depth = v_pos.z() / v_pos.w();
                 rast_tri.v[j].sym = tri.sym;
             }
             winding wind = rast_tri.get_wind();
-            auto in_tri = [&rast_tri, &wind](vec2 &p)
+            auto in_tri = [&rast_tri, &wind](vec2fp &p)
             {
                 bool inside = true;
                 if (wind == winding::clockwise)
@@ -330,7 +336,7 @@ struct console_render_target
                 return inside;
             };
             for (size_s i = 0; i < 3; ++i)
-                rast_tri.v[i].v *= vec2(WIDTH_, HEIGHT_);
+                rast_tri.v[i].v *= vec2fp(WIDTH_, HEIGHT_);
             triangle_2d::bounding_box box;
             rast_tri.get_bounding_box(box);
             if (box.top < 0)
@@ -344,10 +350,10 @@ struct console_render_target
             for (size_t y = (size_t)box.top; y <= box.bottom; ++y)
                 for (size_t x = (size_t)box.left; x <= box.right; ++x)
                 {
-                    vec2 p((fp_num)x, (fp_num)y);
+                    vec2fp p((fp_num)x, (fp_num)y);
                     if (in_tri(p))
                     {
-                        vec2 fragCoord = p.normalized();
+                        vec2fp fragCoord = p.normalized();
                         fp_num d0 = (fragCoord - rast_tri.v[0].v.normalized()).len();
                         fp_num d1 = (fragCoord - rast_tri.v[1].v.normalized()).len();
                         fp_num d2 = (fragCoord - rast_tri.v[2].v.normalized()).len();
@@ -401,7 +407,7 @@ struct console_render_target
 #endif
     }
 
-    static inline bool edge_fn(const vec2 &a, const vec2 &b, const vec2 &c)
+    static inline bool edge_fn(const vec2fp &a, const vec2fp &b, const vec2fp &c)
     {
         return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()) >= 0);
     }
@@ -455,11 +461,11 @@ struct main_loop
     {
 #if RENDER == RENDER_WIN
         render_target.renderer.font_size = 0.2;
-        render_target.renderer.margin = vec2(1, 1);
+        render_target.renderer.margin = vec2fp(1, 1);
 #endif
         if (argc <= 1)
         {
-            if (!cube.load_from_obj(R_PATH(../../global/cube.obj)))
+            if (!cube.load_from_obj(R_PATH("../../global/sphere.obj").c_str()))
                 return false;
         }
         else if (!cube.load_from_obj(argv[1]))
@@ -470,8 +476,8 @@ struct main_loop
     void on_update()
     {
         render_target.home_cursor();
-        cube.rotation += vec4(0.8, 1, 0.4) * delta_time;
-        cube.position = vec4(0, 0, 2.5) + vec4(0, 0, sinf((float)clock() / (float)CLOCKS_PER_SEC));
+        cube.rotation += vec4fp(0.8, 1, 0.4) * delta_time;
+        cube.position = vec4fp(0, 0, 2.5) + vec4fp(0, 0, sinf((float)clock() / (float)CLOCKS_PER_SEC));
         render_target.render_mesh_3d(cube, camera);
         render_target.print();
         render_target.clear();

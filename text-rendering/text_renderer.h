@@ -18,15 +18,15 @@ struct text_renderer
 	struct char_info
 	{
 		char ch = ' ';
-		vec3 col{0.4, 0.25, 0.13};
+		vec3fp col{(fp_num)0.6, (fp_num)0.6, (fp_num)0.6};
 	};
 	struct char_set
 	{
 		struct character
 		{
 			uint tex_id = GL_NONE;
-			vec2 size;
-			vec2 bearing;
+			vec2ui size;
+			vec2ui bearing;
 			uint advance;
 		};
 		std::unordered_map<char, character> characters;
@@ -46,13 +46,13 @@ struct text_renderer
 	uint vao = GL_NONE;
 	char_set glyphs;
 	shader_vf shader;
-	const vec2 char_size;
-	vec2 margin{30, 30};
-	vec2 pixel_size;
-	vec2 cursor;
-	fp_num font_size = 0.2;
+	const vec2st char_size;
+	vec2fp margin{30, 30};
+	vec2fp pixel_size;
+	vec2st cursor;
+	fp_num font_size = (fp_num)0.2;
 
-	text_renderer(size_t char_width, size_t char_height) : char_size((fp_num)char_width, (fp_num)char_height)
+	text_renderer(size_t char_width, size_t char_height) : char_size(char_width, char_height)
 	{
 		screen = new char_info *[(size_t)char_size.y()];
 		for (size_t i = 0; i < char_size.y(); ++i)
@@ -67,7 +67,7 @@ struct text_renderer
 
 	bool init(const char *title, const char *ttf_font_path, size_t text_res = 64, size_t pixel_width = 720, size_t pixel_height = 480)
 	{
-		switch (window.init(title, pixel_size.x() = pixel_width, pixel_size.y() = pixel_height))
+		switch (window.init(title, pixel_size.x() = (fp_num)pixel_width, pixel_size.y() = (fp_num)pixel_height))
 		{
 		case gl_window::init_success:
 			break;
@@ -114,8 +114,8 @@ struct text_renderer
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			char_set::character ch{tex,
-								   vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-								   vec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+								   vec2ui(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+								   vec2ui(face->glyph->bitmap_left, face->glyph->bitmap_top),
 								   (uint)face->glyph->advance.x};
 			glyphs.set(c, ch);
 		}
@@ -145,11 +145,11 @@ struct text_renderer
 		return true;
 	}
 
-	void render_text(const char *text, fp_num x, const fp_num y, const fp_num scale, const vec3 &col)
+	void render_text(const char *text, fp_num x, const fp_num y, const fp_num scale, const vec3fp &col)
 	{
 		shader.use();
 		shader.active_texture(GL_TEXTURE0);
-		mat4 ortho = mat4::orthographic(0, pixel_size.x(), 0, pixel_size.y(), 1, -1);
+		mat4fp ortho = mat4fp::orthographic(0, pixel_size.x(), 0, pixel_size.y(), 1, -1);
 		shader.mat4f("projection", ortho.m);
 		shader.int1("ch", 0);
 		shader.float3("text_colour", col.x(), col.y(), col.z());
@@ -196,14 +196,14 @@ struct text_renderer
 	{
 		pixel_size.x() = (fp_num)window.get_width();
 		pixel_size.y() = (fp_num)window.get_height();
-		vec2 px_size = pixel_size - (margin * 2);
+		vec2fp px_size = pixel_size - (margin * 2);
 		for (size_t y = 0; y < char_size.y(); ++y)
 			for (size_t x = 0; x < char_size.x(); ++x)
 			{
 				if (screen[y][x].ch == ' ')
 					continue;
 				const char txt[2]{screen[y][x].ch, '\0'};
-				vec2 new_pos = (vec2((fp_num)x, (fp_num)y) * (px_size / char_size));
+				vec2fp new_pos = (vec2<fp_num>((fp_num)x, (fp_num)y) * (px_size / vec2fp{(fp_num)char_size.x(), (fp_num)char_size.y()}));
 				render_text(txt, new_pos.x() + margin.x(), (px_size.y() - new_pos.y()) + margin.y(), font_size, screen[y][x].col);
 			}
 	}
@@ -242,7 +242,7 @@ struct text_renderer
 
 	void home_cursor()
 	{
-		cursor = vec2{0, 0};
+		cursor = vec2st{0, 0};
 	}
 };
 
