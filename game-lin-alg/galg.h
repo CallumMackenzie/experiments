@@ -282,7 +282,7 @@
 
 namespace galg
 {
-	typedef double fp_num;
+	typedef float fp_num;
 	typedef unsigned short size_s;
 
 	struct vec4;
@@ -443,6 +443,25 @@ namespace galg
 					break;
 			}
 		}
+		template <typename T>
+		T **to_array()
+		{
+			T **ret = new T *[4];
+			for (size_s i = 0; i < 4; ++i)
+			{
+				ret[i] = new T[4];
+				for (size_s j = 0; j < 4; ++j)
+					ret[i][j] = (T)m[i][j];
+			}
+			return ret;
+		}
+		template <typename T>
+		static void delete_array(T **arr)
+		{
+			for (size_s i = 0; i < 4; ++i)
+				delete[] arr[i];
+			delete[] arr;
+		}
 
 		fp_num *operator[](const size_t index)
 		{
@@ -475,6 +494,14 @@ namespace galg
 						{0, fovRad, 0, 0},
 						{0, 0, far / (far - near), 1},
 						{0, 0, (-far * near) / (far - near), 0}};
+		}
+		static mat4 orthographic(fp_num left, fp_num right, fp_num bottom, fp_num top, fp_num near = -1, fp_num far = 1)
+		{
+			return mat4{
+				{(fp_num)2.0 / (right - left), 0, 0, 0},
+				{0, (fp_num)2.0 / (top - bottom), 0, 0},
+				{0, 0, -(fp_num)2.0 / (far - near), 0},
+				{-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1}};
 		}
 		static mat4 look_at(const vec4 &pos, const vec4 &target, const vec4 &up)
 		{
